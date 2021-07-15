@@ -4,10 +4,14 @@ Title: What the Package Does (Title Case)
 Version: 0.1.0
 Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: The package is an excellent tool for the extraction of the epiallelic
+            composition of specific genomic regions selected from RRBS experiments. 
+            It also provides a series of information specific for each of these regions, 
+            in addition with plotting functions and statistical analysis. 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: Biostrings, GenomicAlignments, GenomeInfoDb
+Imports: Biostrings, GenomicAlignments, GenomeInfoDb, GenomicRanges, IRanges, 
+         parallel, S4Vectors, BSgenome, foreach, future, furrr, purrr, XVector,
+         dplyr, stats, vegan, pairwiseAdonis
 RoxygenNote: 7.1.1

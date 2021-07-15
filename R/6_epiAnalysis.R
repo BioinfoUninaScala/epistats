@@ -1,0 +1,386 @@
+#' epiAnalysis
+#'
+#' @importFrom BSgenome getSeq
+#' @importFrom foreach foreach
+#' @importFrom future plan
+#' @importFrom furrr future_pmap
+#' @importFrom purrr map_df
+#' @importFrom Biostrings vmatchPattern matchPattern reverseComplement DNAString strsplit
+#' @importFrom XVector subseq
+#' @importFrom GenomicAlignments stackStringsFromGAlignments
+#' @param align GAlignments object
+#' @param bin intervals from makeWindows or makeEpialleles
+#' @param bisu.Thresh integer to set bisu efficiency threshold
+#' @param stranded logical
+#' @param mode pattern character
+#' @param remove.Amb logical
+#' @param genome fasta
+#' @param pathDir directory to save output
+#' @param cores num of cores to use
+#' @param retain.reads logical
+#' @param get.cPos logical
+#' @param myfuns list of functions
+#' @return list of dataframes
+#' @export
+#'
+
+epiAnalysis <- function(align, bin, bisu.Thresh=0.8, stranded=FALSE, mode="CG",
+                      remove.Amb=TRUE, genome, pathDir, cores=10, retain.reads=FALSE,
+                      get.cPos=FALSE, myfuns)
+{
+  ###controllo sui parametri
+  if((!mode=="CG") & (stranded==FALSE))
+  {
+    print(paste("unstranded mode not supported for",mode, "mode",sep=" "))
+  } else {
+    ## Takes all the refseq in my intervals coordinates
+    refseq=BSgenome::getSeq(genome, bin)
+    ## Do epiallele_analyse for all the intervals
+    df= cbind(data.frame(bin)[,1:3], refseq=as.character(refseq))
+
+    df_split <- split(df, (seq(nrow(df))-1) %/% (nrow(df)/cores))
+
+    pb <- progress_bar$new(total = cores)
+
+    regs <- foreach (dfi = df_split) %do% {
+      pb$tick()
+      region = GenomicRanges::GRanges(dfi$seqnames,IRanges(dfi$start,dfi$end))
+      subsetByOverlaps(align, region)
+    }
+
+    options(future.globals.maxSize = max(regs %>% map_dbl(object.size)) * 1.2)
+
+    plan(multisession,workers=cores)
+
+    library(progressr)
+    handlers(global = TRUE)
+    handlers("progress", "beepr")
+
+    Mapi <-  list(df_split,regs) %>% furrr::future_pmap(epiallele_analyse_Block,
+                                                        bisu.Thresh, stranded, mode,
+                                                        remove.Amb, retain.reads,
+                                                        get.cPos,myfuns)
+
+    Mapi <- unlist(Mapi, recursive = FALSE)
+    intervals <- Mapi %>% map_df(~ .$intervals)
+    epi <- Mapi %>% map_df(~ .$epi)
+    log <- Mapi %>% map_df(~ .$log)
+    #### Costruisce i dataframe e li scrive nei rispettivi file
+    #out=do.call(Mapi, c(rbind, out))
+    #setta i file e i nomi di colonna
+    bedFile=paste(pathDir,paste(aname,"intervals.bed", sep="_"),sep="/")
+    write.table(intervals,bedFile, row.names = F, col.names = T, quote= F, sep = "\t")
+    epiFile=paste(pathDir,paste(aname,"epiAnalysis.txt", sep="_"),sep="/")
+    write.table(epi, epiFile, row.names = F, col.names = T, quote= F, sep ="\t")
+    logFile=paste(pathDir,paste(aname,"log.txt", sep="_"),sep="/")
+    write.table(log, logFile, row.names = F, col.names = F, quote= F, sep ="\t")
+    if(get.cPos==TRUE)
+    {
+      cPosFile=paste(pathDir,paste(aname,"cPos.txt", sep="_"), sep="/")
+      write.table(out[["CPos"]], cPosFile, row.names = F, col.names = F, quote = F, sep="\t")
+    }
+  }
+  return(list(intervals,epi,log))
+}
+
+
+read_filter=function(alignObj)
+{
+  align_trunk= alignObj[Biostrings::vmatchPattern("+", alignObj)]
+  alignObj= alignObj[which(align_trunk@ranges@width == 0)]
+  alignObj= alignObj[!duplicated(names(alignObj))]
+  return(alignObj)
+}
+
+
+get_cPos=function(rseq, mode, strand, bisu.Thresh)
+{
+  if (strand == "plus")
+  {
+    cMode = Biostrings::matchPattern(mode, rseq)@ranges@start
+    ###solo strand plus
+    if (bisu.Thresh==0)
+    {
+      ###se non deve fare il controllo del bisulfito
+      cPos=list(as.list(cMode),list(),list(),list())
+    }else{
+      ###se deve fare il controllo del bisulfito
+      if (mode == "CG")
+      {
+        #sulle cpg
+        cNotMode <- Biostrings::matchPattern("C", rseq)@ranges@start
+        cNotMode= cNotMode[!cNotMode %in% cMode]
+      } else {
+        #sulle non cpg
+        cNotMode <- Biostrings::matchPattern("C", rseq)@ranges@start
+        cg_pos = Biostrings::matchPattern("CG", rseq)@ranges@start
+        cNotMode = cNotMode[!cNotMode %in% c(cMode,cg_pos)]
+      }
+      cPos=list(as.list(cMode), as.list(cNotMode),list(),list())
+    }
+
+  } else if (strand == "minus"){
+    ###solo strand minus
+    if(mode=="CG")
+    {
+      cMode=Biostrings::matchPattern(mode, rseq)@ranges@start
+      cMode=cMode
+    }else{
+      cMode=Biostrings::matchPattern(Biostrings::reverseComplement(Biostrings::DNAString(mode)), rseq)@ranges@start
+      cMode=cMode
+    }
+    if (bisu.Thresh==0)
+    {
+      ###se non deve fare il controllo del bisulfito
+      cPos=list(list(),list(),as.list(cMode),list())
+    }else{
+      ###se deve fare il controllo del bisulfito
+      if (mode == "CG")
+      {
+        #sulle cpg
+        cNotMode <- Biostrings::matchPattern("G", rseq)@ranges@start
+        cNotMode= cNotMode[!cNotMode %in% cMode]
+      } else {
+        #sulle non cpg
+        cNotMode <- Biostrings::matchPattern("G", rseq)@ranges@start
+        cg_pos = (Biostrings::matchPattern("CG", rseq)@ranges@start)+1
+        cNotMode = cNotMode[!cNotMode %in% c(cMode,cg_pos)]
+      }
+      cPos=list(list(),list(),as.list(cMode), as.list(cNotMode))
+    }
+
+  }else{
+    ###entrambi gli strand
+    cMode_plus = Biostrings::matchPattern(mode, rseq)@ranges@start
+    if(mode=="CG")
+    {
+      cMode_minus=cMode_plus
+    }else{
+      cMode_minus = Biostrings::matchPattern(Biostrings::reverseComplement(Biostrings::DNAString(mode)), rseq)@ranges@start
+    }
+    if (bisu.Thresh==0)
+    {
+      ###se non deve fare il controllo del bisulfito
+      cPos=list(as.list(cMode_plus),list(),as.list(cMode_minus),list())
+    }else{
+      ###se deve fare il controllo del bisulfito
+      if (mode == "CG")
+      {
+        #sulle cpg
+        cNotMode_plus=Biostrings::matchPattern("C",rseq)@ranges@start
+        cNotMode_plus= cNotMode_plus[!cNotMode_plus %in% cMode_plus]
+        cNotMode_minus=Biostrings::matchPattern("G",rseq)@ranges@start
+        cNotMode_minus=cNotMode_minus[!cNotMode_minus %in% as.integer(cMode_minus+1)]
+      } else {
+        #sulle non cpg
+        cNotMode_plus <- Biostrings::matchPattern("C", rseq)@ranges@start
+        cg_pos = Biostrings::matchPattern("CG", rseq)@ranges@start
+        cNotMode_plus = cNotMode_plus[!cNotMode_plus %in% c(cMode_plus,cg_pos)]
+        cNotMode_minus <- Biostrings::matchPattern("G", rseq)@ranges@start
+        cg_pos = (Biostrings::matchPattern("CG", rseq)@ranges@start)+1
+        cNotMode_minus = cNotMode_minus[!cNotMode_minus %in% c(cMode_minus+1,cg_pos)]
+      }
+      cPos=list(as.list(cMode_plus),as.list(cNotMode_plus),as.list(cMode_minus),as.list(cNotMode_minus))
+    }
+  }
+  return(cPos)
+}
+
+
+extract_matrix=function(alignObj, pos, strand, mode)
+{
+  if(mode=="bisu"){
+    data=lapply(pos, function(x) {y = XVector::subseq(alignObj, x, x); return(unname(as.vector(y)))})
+    data=as.data.frame(do.call(cbind,data))
+    if(strand == "plus")
+    {
+      data <- as.data.frame(lapply(data, function(x) ifelse(x == "C", 1, ifelse(x == "T", 0, NA))))
+    }else{
+      data <- as.data.frame(lapply(data, function(x) ifelse(x == "G", 1, ifelse(x == "A", 0, NA))))
+    }
+  } else{
+    char= unlist(Biostrings::strsplit(mode, split=""))
+    data=lapply(pos, function(x) {y = XVector::subseq(alignObj, x, x+1); return(unname(as.vector(y)))})
+    data=as.data.frame(do.call(cbind,data))
+    if(strand == "plus")
+    {
+      char= paste(c("C", "T"), char[2], sep="")
+      data <- as.data.frame(lapply(data, function(x) ifelse(x == char[1], 1, ifelse(x == char[2], 0, NA))))
+    }else{ ### reverse complement
+      char= paste(Biostrings::reverseComplement(Biostrings::DNAString(char[2])), c("G", "A"), sep="")
+      data <- as.data.frame(lapply(data, function(x) ifelse(x == char[1], 1, ifelse(x == char[2], 0, NA))))
+    }
+  }
+  # rownames(data)=names(alignObj)
+  return(data)
+}
+
+
+get_epiMatrix=function(alignObj, bisu.Thresh, remove.Amb, c.Mode, c.NotMode, strand, retain.reads, mode)
+{
+  data_mode=extract_matrix(alignObj, c.Mode, strand, mode)
+  if(remove.Amb==TRUE)
+  {
+    index=which(rowSums(is.na(data_mode))>0)
+    if(length(index)>0)
+    {
+      data_mode=data_mode[-index,]
+    }
+  }
+  ######passa al controllo del bisulfito
+  ######se il cutoff e' zero oppure se non e' zero ma non ci sono le c su cui effettuarlo e l'utente ha specificato di consevare le reads
+  if (bisu.Thresh==0 | (bisu.Thresh >0 & (length(c.NotMode)==0 & retain.reads==TRUE)))
+  {
+    ####se la soglia e' zero
+    return(data_mode)
+  }else{
+    ####se la soglia non e' zero
+    if(length(c.NotMode) == 0 & retain.reads== FALSE)
+      ######se non ci sono c su cui effettuare il controllo e l'utente ha specificato di non conservare le reads
+    {
+      return(data.frame())
+    }else{
+      #####se ci sono le c su cui effettuare il controllo
+      data_bisu=extract_matrix(alignObj, c.NotMode, strand, mode= "bisu")
+      ###eventualmente va a rimuovere le reads eliminate con amb thresh.
+      if(length(index)>0)
+      {
+        data_bisu=data_bisu[-index,]
+      }
+      ###esegue filtro del bisulfito
+      eff=apply(as.matrix(data_bisu), 1, function(x) 1-(sum(x, na.rm = TRUE)/length(x[!is.na(x)])))
+      ########azzera l'efficienza delle reads in cui le non cg sono tutte na
+      eff[is.na(eff)]=0
+      data_mode=data_mode[eff >=bisu.Thresh,]
+      return(data_mode)
+    }
+  }
+}
+
+
+get_out=function(matrix, out, strand, coord, get.cPos, myfuns)
+{
+  parameters=lapply(myfuns, function(x) x(matrix))
+  mydata= data.frame(as.data.frame(coord),
+                     as.data.frame(parameters))
+  mydata$strand=strand
+  out[["intervals"]]=mydata
+  id=apply(mydata[1,c(1:3)],1,function(x) paste(x,collapse="_"))
+  matrix$epi= apply(matrix, 1, function(x) paste(x, collapse = ""))
+  matrix=as.data.frame(table(matrix$epi))
+  matrix$id=id
+  matrix$strand=strand
+  out[["epi"]]=matrix
+  if(get.cPos == TRUE)
+  {
+    Cpos=as.numeric(names(matrix))
+    out[["CPos"]]=data.frame('chr'= rep(as.character(seqnames(coord)),length(Cpos)),"start"= Cpos + coord@ranges@start - 1,"end"= Cpos + coord@ranges@start, "strand"=rep(strand, length(Cpos)), "id"=rep(id,length(Cpos)))
+  }
+  return(out)
+}
+
+
+epiallele_analyse=function(align, bin, bisu.Thresh, stranded, mode, remove.Amb, rseq, retain.reads, get.cPos, myfuns){
+  if(get.cPos==FALSE)
+  {
+    out=list("intervals"=data.frame(),"epi"=data.frame(),"log"=data.frame())
+  }else{
+    out=list("intervals"=data.frame(),"epi"=data.frame(),"log"=data.frame(),"CPos"=data.frame())
+  }
+  ##############################restituisce gli allineamenti delle reads per la regione di interess
+  reads <- GenomicAlignments::stackStringsFromGAlignments(align, region= bin)
+  reads <- reads[!duplicated(names(reads))]
+  align_plus = reads[reads@elementMetadata$strand=="+"]
+  align_minus = reads[reads@elementMetadata$strand=="-"]
+  #Plus
+  align_trunk = align_plus[Biostrings::vmatchPattern("+", align_plus)]
+  align_plus = align_plus[which(align_trunk@ranges@width== 0)]
+  #Minus
+  align_trunk = align_minus[Biostrings::vmatchPattern("+", align_minus)]
+  align_minus = align_minus[which(align_trunk@ranges@width== 0)]
+  ############################
+  ####fa il check dello strand e degli allineamenti, per capire su quali richiamare getMatrix
+  if (bin@strand@values =="*" & (length(align_minus)==0 & length(align_plus)==0) |
+      bin@strand@values =="-" & length(align_minus)==0|
+      bin@strand@values =="+" & length(align_plus)==0)
+  {
+    out[["log"]]=as.data.frame(bin)
+  }else{
+
+    ##se strand * ed entrambi gli allineamenti sono non vuoti
+    if(bin@strand@values =="*" & (length(align_minus)>0 & length(align_plus)>0))
+    {
+      cPos=get_cPos(rseq, mode,"*",bisu.Thresh)
+      data_plus=get_epiMatrix(align_plus, bisu.Thresh, remove.Amb, cPos[[1]], cPos[[2]], strand = "plus", retain.reads = retain.reads, mode)
+      data_minus=get_epiMatrix(align_minus, bisu.Thresh, remove.Amb, cPos[[3]], cPos[[4]], strand = "minus", retain.reads = retain.reads, mode)
+      ###se tutte le reads sono filtrate per ambthresh o bisulfito, scrive bin nel log
+      if (dim(data_plus)[1]==0 & dim(data_minus)[1]==0)
+      {
+        out[["log"]]=as.data.frame(bin)
+      }else{
+        if(stranded == FALSE)
+        {
+          if(dim(data_plus)[1]>0 & dim(data_minus)[1]>0)
+          {
+            names(data_minus)=names(data_plus)
+          }
+          data=rbind(data_plus,data_minus)
+          names(data)=unlist(cPos[[1]])
+          out=get_out(data, out, "*", bin, get.cPos, myfuns)
+        }else{
+          if(dim(data_plus)[1]>0)
+          {
+            names(data_plus)=unlist(cPos[[1]])
+            out=get_out(data_plus, out, "+", bin, get.cPos, myfuns)
+          }
+          if(dim(data_minus)[1]>0)
+          {
+            names(data_minus)=unlist(cPos[[3]])
+            out=get_out(data_minus, out, "-", bin, get.cPos, myfuns)
+          }
+        }
+      }
+      ##se lo strand * e solo il positivo e' pieno oppure se lo strand e' +
+    }else if(bin@strand@values =="*" & (length(align_minus)==0 & length(align_plus)>0)|
+             bin@strand@values =="+")
+    {
+      cPos=get_cPos(rseq,mode,"plus",bisu.Thresh)
+      data_plus=get_epiMatrix(align_plus, bisu.Thresh, remove.Amb, cPos[[1]], cPos[[2]], "plus", retain.reads, mode)
+      if (dim(data_plus)[1]==0)
+      {
+        out[["log"]]=as.data.frame(bin)
+      }else{
+        names(data_plus)=unlist(cPos[[1]])
+        out=get_out(data_plus, out, bin@strand@values, bin, get.cPos, myfuns)
+      }
+    }else {
+      ##se lo strand e' * e solo in negativo e' pieno oppure lo strand e' -
+      cPos=get_cPos(rseq,mode,"minus",bisu.Thresh)
+      data_minus=get_epiMatrix(align_minus, bisu.Thresh, remove.Amb, cPos[[3]], cPos[[4]], "minus", retain.reads,mode)
+      if (dim(data_minus)[1]==0)
+      {
+        out[["log"]]=as.data.frame(bin)
+      }else{
+        names(data_minus)=unlist(cPos[[3]])
+        out=get_out(data_minus, out, bin@strand@values, bin, get.cPos, myfuns)
+      }
+    }
+  }
+  return(out)
+}
+
+
+epiallele_analyse_Block <- function(df, aln_c, bisu.Thresh, stranded, mode, remove.Amb, retain.reads,get.cPos,myfuns){
+  foreach (i= 1:nrow(df)) %do% {
+    epiallele_analyse(align= aln_c,
+                      bin = GRanges(df[i,]$seqnames,IRanges(df[i,]$start,df[i,]$end)),
+                      bisu.Thresh,
+                      stranded,
+                      mode,
+                      remove.Amb,
+                      rseq = df[i,]$refseq,
+                      retain.reads, get.cPos, myfuns)
+  }
+}
+
+
