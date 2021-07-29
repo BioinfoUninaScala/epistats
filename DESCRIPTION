@@ -13,5 +13,5 @@ Encoding: UTF-8
 LazyData: true
 Imports: Biostrings, GenomicAlignments, GenomeInfoDb, GenomicRanges, IRanges, 
          parallel, S4Vectors, BSgenome, foreach, future, furrr, purrr, XVector,
-         dplyr, stats, vegan, pairwiseAdonis
+         dplyr, stats, vegan, pairwiseAdonis, progressr, progress, magrittr 
 RoxygenNote: 7.1.1

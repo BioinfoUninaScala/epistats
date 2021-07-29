@@ -1,13 +1,18 @@
 #' epiAnalysis
 #'
 #' @importFrom BSgenome getSeq
-#' @importFrom foreach foreach
-#' @importFrom future plan
+#' @importFrom foreach foreach %do%
+#' @importFrom future plan multisession
 #' @importFrom furrr future_pmap
-#' @importFrom purrr map_df
+#' @importFrom purrr map_df map_dbl
 #' @importFrom Biostrings vmatchPattern matchPattern reverseComplement DNAString strsplit
 #' @importFrom XVector subseq
 #' @importFrom GenomicAlignments stackStringsFromGAlignments
+#' @importFrom progress progress_bar
+#' @importFrom GenomicRanges GRanges
+#' @importFrom IRanges IRanges subsetByOverlaps
+#' @importFrom magrittr %>%
+#' @importFrom progressr handlers
 #' @param align GAlignments object
 #' @param bin intervals from makeWindows or makeEpialleles
 #' @param bisu.Thresh integer to set bisu efficiency threshold
@@ -34,27 +39,26 @@ epiAnalysis <- function(align, bin, bisu.Thresh=0.8, stranded=FALSE, mode="CG",
     print(paste("unstranded mode not supported for",mode, "mode",sep=" "))
   } else {
     ## Takes all the refseq in my intervals coordinates
-    refseq=BSgenome::getSeq(genome, bin)
+    refseq= BSgenome::getSeq(genome, bin)
     ## Do epiallele_analyse for all the intervals
     df= cbind(data.frame(bin)[,1:3], refseq=as.character(refseq))
 
     df_split <- split(df, (seq(nrow(df))-1) %/% (nrow(df)/cores))
 
-    pb <- progress_bar$new(total = cores)
+    pb <- progress::progress_bar$new(total = cores)
 
     regs <- foreach (dfi = df_split) %do% {
       pb$tick()
-      region = GenomicRanges::GRanges(dfi$seqnames,IRanges(dfi$start,dfi$end))
-      subsetByOverlaps(align, region)
+      region = GenomicRanges::GRanges(dfi$seqnames, IRanges::IRanges(dfi$start,dfi$end))
+      IRanges::subsetByOverlaps(align, region)
     }
 
-    options(future.globals.maxSize = max(regs %>% map_dbl(object.size)) * 1.2)
+    options(future.globals.maxSize = max(regs %>% purrr::map_dbl(object.size)) * 1.2)
 
-    plan(multisession,workers=cores)
+    future::plan(future::multisession,workers=cores)
 
-    library(progressr)
-    handlers(global = TRUE)
-    handlers("progress", "beepr")
+    progressr::handlers(global = TRUE)
+    progressr::handlers("progress", "beepr")
 
     Mapi <-  list(df_split,regs) %>% furrr::future_pmap(epiallele_analyse_Block,
                                                         bisu.Thresh, stranded, mode,
@@ -62,9 +66,9 @@ epiAnalysis <- function(align, bin, bisu.Thresh=0.8, stranded=FALSE, mode="CG",
                                                         get.cPos,myfuns)
 
     Mapi <- unlist(Mapi, recursive = FALSE)
-    intervals <- Mapi %>% map_df(~ .$intervals)
-    epi <- Mapi %>% map_df(~ .$epi)
-    log <- Mapi %>% map_df(~ .$log)
+    intervals <- Mapi %>% purrr::map_df(~ .$intervals)
+    epi <- Mapi %>% purrr::map_df(~ .$epi)
+    log <- Mapi %>% purrr::map_df(~ .$log)
     #### Costruisce i dataframe e li scrive nei rispettivi file
     #out=do.call(Mapi, c(rbind, out))
     #setta i file e i nomi di colonna

@@ -2,7 +2,7 @@
 #'
 #' @importFrom parallel mclapply
 #' @importFrom GenomeInfoDb seqlevels
-#' @importFrom IRanges IRanges IRangesList
+#' @importFrom IRanges IRanges IRangesList ranges
 #' @importFrom Biostrings matchPattern
 #' @importFrom GenomicRanges findOverlaps countOverlaps
 #' @importFrom S4Vectors countQueryHits queryHits
@@ -96,6 +96,6 @@ findBins <- function(gr,
                      n)
 {
   cat("processing", as.character(gr@seqnames@values), "\n")
-  return(IRanges::IRanges(start = ranges(gr)@start[c(1:(length(gr)-n+1))],end=(ranges(gr)@start[c(n:length(gr))])+1,
+  return(IRanges::IRanges(start = IRanges::ranges(gr)@start[c(1:(length(gr)-n+1))],end=(IRanges::ranges(gr)@start[c(n:length(gr))])+1,
                           names = rep(gr@seqnames@values, times= length(gr)-n+1)))
 }
