@@ -297,7 +297,6 @@ get_out=function(matrix, out, strand, coord, get.cPos, myfuns)
   return(out)
 }
 
-
 epiallele_analyse=function(align, bin, threshold, bisu.Thresh, stranded, mode, remove.Amb, rseq, retain.reads, get.cPos, myfuns){
   if(get.cPos==FALSE)
   {
@@ -306,7 +305,7 @@ epiallele_analyse=function(align, bin, threshold, bisu.Thresh, stranded, mode, r
     out=list("intervals"=data.frame(),"epi"=data.frame(),"log"=data.frame(),"CPos"=data.frame())
   }
   ##############################restituisce gli allineamenti delle reads per la regione di interess
-  reads <-stackStringsFromGAlignments(align, gr)
+  reads <-stackStringsFromGAlignments(align, bin)
   reads <- reads[!duplicated(names(reads))]
   reads_trunk <- reads[vmatchPattern("+", reads)]
   reads <- reads[which(reads_trunk@ranges@width == 0)]
@@ -387,7 +386,7 @@ epiallele_analyse=function(align, bin, threshold, bisu.Thresh, stranded, mode, r
 }
 
 
-epiallele_analyse_Block <- function(df, aln_c, threshold, bisu.Thresh, stranded, mode, remove.Amb, retain.reads, get.cPos, cores, myfuns){
+epiallele_analyse_Block <- function(df, aln_c, threshold, bisu.Thresh, stranded, mode, remove.Amb, retain.reads, get.cPos, myfuns){
   foreach (i= 1:nrow(df)) %do% {
     epiallele_analyse(align= aln_c,
                       bin = GRanges(df[i,]$seqnames,IRanges(df[i,]$start,df[i,]$end)),
@@ -397,11 +396,18 @@ epiallele_analyse_Block <- function(df, aln_c, threshold, bisu.Thresh, stranded,
                       mode = mode,
                       remove.Amb = remove.Amb,
                       rseq = df[i,]$refseq,
-                      cores = cores,
                       retain.reads = retain.reads,
                       get.cPos = get.cPos,
                       myfuns = myfuns)
   }
 }
+
+
+
+
+
+
+
+
 
 
