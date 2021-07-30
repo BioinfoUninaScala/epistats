@@ -15,23 +15,36 @@
 #' @importFrom progressr handlers
 #' @param align GAlignments object
 #' @param bin intervals from makeWindows or makeEpialleles
+#' @param aname character indicating the analysis name
+#' @param threshold integer indicating the minimum coverage required to analyse an interval
+#' @param pathDir directory to save output
+#' @param genome fasta
+#' @param myfuns list of functions
 #' @param bisu.Thresh integer to set bisu efficiency threshold
 #' @param stranded logical
 #' @param mode pattern character
 #' @param remove.Amb logical
-#' @param genome fasta
-#' @param pathDir directory to save output
 #' @param cores num of cores to use
 #' @param retain.reads logical
 #' @param get.cPos logical
-#' @param myfuns list of functions
 #' @return list of dataframes
 #' @export
 #'
 
-epiAnalysis <- function(align, bin, bisu.Thresh=0.8, stranded=FALSE, mode="CG",
-                      remove.Amb=TRUE, genome, pathDir, cores=10, retain.reads=FALSE,
-                      get.cPos=FALSE, myfuns)
+epiAnalysis= function(align,
+                      bin,
+                      aname,
+                      threshold,
+                      pathDir,
+                      genome,
+                      myfuns,
+                      bisu.Thresh = 0,
+                      stranded=FALSE,
+                      mode="CG",
+                      remove.Amb =TRUE,
+                      cores = 1,
+                      retain.reads = FALSE,
+                      get.cPos=FALSE)
 {
   ###controllo sui parametri
   if((!mode=="CG") & (stranded==FALSE))
@@ -39,36 +52,37 @@ epiAnalysis <- function(align, bin, bisu.Thresh=0.8, stranded=FALSE, mode="CG",
     print(paste("unstranded mode not supported for",mode, "mode",sep=" "))
   } else {
     ## Takes all the refseq in my intervals coordinates
-    refseq= BSgenome::getSeq(genome, bin)
+    refseq=BSgenome::getSeq(genome, bin)
     ## Do epiallele_analyse for all the intervals
     df= cbind(data.frame(bin)[,1:3], refseq=as.character(refseq))
 
     df_split <- split(df, (seq(nrow(df))-1) %/% (nrow(df)/cores))
 
-    pb <- progress::progress_bar$new(total = cores)
+    pb <- progress_bar$new(total = cores)
 
     regs <- foreach (dfi = df_split) %do% {
       pb$tick()
-      region = GenomicRanges::GRanges(dfi$seqnames, IRanges::IRanges(dfi$start,dfi$end))
-      IRanges::subsetByOverlaps(align, region)
+      region = GRanges(dfi$seqnames,IRanges(dfi$start,dfi$end))
+      subsetByOverlaps(align, region)
     }
 
-    options(future.globals.maxSize = max(regs %>% purrr::map_dbl(object.size)) * 1.2)
+    options(future.globals.maxSize = max(regs %>% map_dbl(object.size)) * 1.2)
 
-    future::plan(future::multisession,workers=cores)
+    plan(multisession,workers=cores)
 
-    progressr::handlers(global = TRUE)
-    progressr::handlers("progress", "beepr")
+    library(progressr)
+    handlers(global = TRUE)
+    handlers("progress", "beepr")
 
-    Mapi <-  list(df_split,regs) %>% furrr::future_pmap(epiallele_analyse_Block,
-                                                        bisu.Thresh, stranded, mode,
-                                                        remove.Amb, retain.reads,
-                                                        get.cPos,myfuns)
+    Mapi <-  list(df_split,regs) %>% future_pmap(epiallele_analyse_Block,
+                                                 threshold, bisu.Thresh, stranded,
+                                                 mode, remove.Amb, retain.reads,
+                                                 get.cPos,myfuns)
 
     Mapi <- unlist(Mapi, recursive = FALSE)
-    intervals <- Mapi %>% purrr::map_df(~ .$intervals)
-    epi <- Mapi %>% purrr::map_df(~ .$epi)
-    log <- Mapi %>% purrr::map_df(~ .$log)
+    intervals <- Mapi %>% map_df(~ .$intervals)
+    epi <- Mapi %>% map_df(~ .$epi)
+    log <- Mapi %>% map_df(~ .$log)
     #### Costruisce i dataframe e li scrive nei rispettivi file
     #out=do.call(Mapi, c(rbind, out))
     #setta i file e i nomi di colonna
@@ -284,7 +298,7 @@ get_out=function(matrix, out, strand, coord, get.cPos, myfuns)
 }
 
 
-epiallele_analyse=function(align, bin, bisu.Thresh, stranded, mode, remove.Amb, rseq, retain.reads, get.cPos, myfuns){
+epiallele_analyse=function(align, bin, threshold, bisu.Thresh, stranded, mode, remove.Amb, rseq, retain.reads, get.cPos, myfuns){
   if(get.cPos==FALSE)
   {
     out=list("intervals"=data.frame(),"epi"=data.frame(),"log"=data.frame())
@@ -292,21 +306,20 @@ epiallele_analyse=function(align, bin, bisu.Thresh, stranded, mode, remove.Amb, 
     out=list("intervals"=data.frame(),"epi"=data.frame(),"log"=data.frame(),"CPos"=data.frame())
   }
   ##############################restituisce gli allineamenti delle reads per la regione di interess
-  reads <- GenomicAlignments::stackStringsFromGAlignments(align, region= bin)
+  reads <-stackStringsFromGAlignments(align, gr)
   reads <- reads[!duplicated(names(reads))]
-  align_plus = reads[reads@elementMetadata$strand=="+"]
-  align_minus = reads[reads@elementMetadata$strand=="-"]
-  #Plus
-  align_trunk = align_plus[Biostrings::vmatchPattern("+", align_plus)]
-  align_plus = align_plus[which(align_trunk@ranges@width== 0)]
-  #Minus
-  align_trunk = align_minus[Biostrings::vmatchPattern("+", align_minus)]
-  align_minus = align_minus[which(align_trunk@ranges@width== 0)]
+  reads_trunk <- reads[vmatchPattern("+", reads)]
+  reads <- reads[which(reads_trunk@ranges@width == 0)]
+  ## Plus
+  align_plus= reads[reads@elementMetadata$strand=="+"]
+  ## Minus
+  align_minus= reads[reads@elementMetadata$strand=="-"]
   ############################
   ####fa il check dello strand e degli allineamenti, per capire su quali richiamare getMatrix
   if (bin@strand@values =="*" & (length(align_minus)==0 & length(align_plus)==0) |
       bin@strand@values =="-" & length(align_minus)==0|
-      bin@strand@values =="+" & length(align_plus)==0)
+      bin@strand@values =="+" & length(align_plus)==0 |
+      length(reads) < threshold)
   {
     out[["log"]]=as.data.frame(bin)
   }else{
@@ -374,10 +387,11 @@ epiallele_analyse=function(align, bin, bisu.Thresh, stranded, mode, remove.Amb, 
 }
 
 
-epiallele_analyse_Block <- function(df, aln_c, bisu.Thresh, stranded, mode, remove.Amb, retain.reads,get.cPos,myfuns){
+epiallele_analyse_Block <- function(df, aln_c, threshold, bisu.Thresh, stranded, mode, remove.Amb, retain.reads,get.cPos,myfuns){
   foreach (i= 1:nrow(df)) %do% {
     epiallele_analyse(align= aln_c,
                       bin = GRanges(df[i,]$seqnames,IRanges(df[i,]$start,df[i,]$end)),
+                      threshold = threshold,
                       bisu.Thresh,
                       stranded,
                       mode,
