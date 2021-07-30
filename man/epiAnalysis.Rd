@@ -7,22 +7,34 @@
 epiAnalysis(
   align,
   bin,
-  bisu.Thresh = 0.8,
+  aname,
+  threshold,
+  pathDir,
+  genome,
+  myfuns,
+  bisu.Thresh = 0,
   stranded = FALSE,
   mode = "CG",
   remove.Amb = TRUE,
-  genome,
-  pathDir,
-  cores = 10,
+  cores = 1,
   retain.reads = FALSE,
-  get.cPos = FALSE,
-  myfuns
+  get.cPos = FALSE
 )
 }
 \arguments{
 \item{align}{GAlignments object}
 
 \item{bin}{intervals from makeWindows or makeEpialleles}
+
+\item{aname}{character indicating the analysis name}
+
+\item{threshold}{integer indicating the minimum coverage required to analyse an interval}
+
+\item{pathDir}{directory to save output}
+
+\item{genome}{fasta}
+
+\item{myfuns}{list of functions}
 
 \item{bisu.Thresh}{integer to set bisu efficiency threshold}
 
@@ -32,17 +44,11 @@ epiAnalysis(
 
 \item{remove.Amb}{logical}
 
-\item{genome}{fasta}
-
-\item{pathDir}{directory to save output}
-
 \item{cores}{num of cores to use}
 
 \item{retain.reads}{logical}
 
 \item{get.cPos}{logical}
-
-\item{myfuns}{list of functions}
 }
 \value{
 list of dataframes

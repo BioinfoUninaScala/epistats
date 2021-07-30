@@ -387,17 +387,20 @@ epiallele_analyse=function(align, bin, threshold, bisu.Thresh, stranded, mode, r
 }
 
 
-epiallele_analyse_Block <- function(df, aln_c, threshold, bisu.Thresh, stranded, mode, remove.Amb, retain.reads,get.cPos,myfuns){
+epiallele_analyse_Block <- function(df, aln_c, threshold, bisu.Thresh, stranded, mode, remove.Amb, retain.reads, get.cPos, cores, myfuns){
   foreach (i= 1:nrow(df)) %do% {
     epiallele_analyse(align= aln_c,
                       bin = GRanges(df[i,]$seqnames,IRanges(df[i,]$start,df[i,]$end)),
                       threshold = threshold,
-                      bisu.Thresh,
-                      stranded,
-                      mode,
-                      remove.Amb,
+                      bisu.Thresh = bisu.Thresh,
+                      stranded = stranded,
+                      mode = mode,
+                      remove.Amb = remove.Amb,
                       rseq = df[i,]$refseq,
-                      retain.reads, get.cPos, myfuns)
+                      cores = cores,
+                      retain.reads = retain.reads,
+                      get.cPos = get.cPos,
+                      myfuns = myfuns)
   }
 }
 
