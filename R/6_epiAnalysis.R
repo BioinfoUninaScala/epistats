@@ -3,7 +3,7 @@
 #' @importFrom BSgenome getSeq
 #' @importFrom foreach foreach %do%
 #' @importFrom future plan multisession
-#' @importFrom furrr future_pmap
+#' @importFrom furrr future_map2
 #' @importFrom purrr map_df map_dbl
 #' @importFrom Biostrings vmatchPattern matchPattern reverseComplement DNAString strsplit
 #' @importFrom XVector subseq
@@ -47,7 +47,7 @@ epiAnalysis= function(align,
                       get.cPos=FALSE)
 {
   ###controllo sui parametri
-  if((!mode=="CG") & (stranded==FALSE))
+  if((!mode=="CG") & (stranded == FALSE))
   {
     print(paste("unstranded mode not supported for",mode, "mode",sep=" "))
   } else {
@@ -58,31 +58,30 @@ epiAnalysis= function(align,
 
     df_split <- split(df, (seq(nrow(df))-1) %/% (nrow(df)/cores))
 
-    pb <- progress_bar$new(total = cores)
+    pb <- progress::progress_bar$new(total = cores)
 
-    regs <- foreach (dfi = df_split) %do% {
+    regs <- foreach::foreach (dfi = df_split) %do% {
       pb$tick()
-      region = GRanges(dfi$seqnames,IRanges(dfi$start,dfi$end))
-      subsetByOverlaps(align, region)
+      region = GenomicRanges::GRanges(dfi$seqnames, IRanges::IRanges(dfi$start,dfi$end))
+      IRanges::subsetByOverlaps(align, region)
     }
 
-    options(future.globals.maxSize = max(regs %>% map_dbl(object.size)) * 1.2)
+    options(future.globals.maxSize = max(regs %>% purrr::map_dbl(object.size)) * 1.2)
 
-    plan(multisession,workers=cores)
+    future::plan(multisession,workers=cores)
 
-    library(progressr)
-    handlers(global = TRUE)
-    handlers("progress", "beepr")
+    progressr::handlers(global = TRUE)
+    progressr::handlers("progress", "beepr")
 
-    Mapi <-  list(df_split,regs) %>% future_pmap(epiallele_analyse_Block,
-                                                 threshold, bisu.Thresh, stranded,
-                                                 mode, remove.Amb, retain.reads,
-                                                 get.cPos,myfuns)
+    Mapi <- furrr::future_map2(df_split, regs, epiallele_analyse_Block,
+                                               bisu.Thresh, stranded,
+                                               mode, remove.Amb, retain.reads,
+                                               get.cPos, myfuns)
 
     Mapi <- unlist(Mapi, recursive = FALSE)
-    intervals <- Mapi %>% map_df(~ .$intervals)
-    epi <- Mapi %>% map_df(~ .$epi)
-    log <- Mapi %>% map_df(~ .$log)
+    intervals <- Mapi %>% purrr::map_df(~ .$intervals)
+    epi <- Mapi %>% purrr::map_df(~ .$epi)
+    log <- Mapi %>% purrr::map_df(~ .$log)
     #### Costruisce i dataframe e li scrive nei rispettivi file
     #out=do.call(Mapi, c(rbind, out))
     #setta i file e i nomi di colonna
@@ -297,7 +296,17 @@ get_out=function(matrix, out, strand, coord, get.cPos, myfuns)
   return(out)
 }
 
-epiallele_analyse=function(align, bin, threshold, bisu.Thresh, stranded, mode, remove.Amb, rseq, retain.reads, get.cPos, myfuns){
+epiallele_analyse=function(align,
+                           bin,
+                           threshold,
+                           bisu.Thresh,
+                           stranded,
+                           mode,
+                           remove.Amb,
+                           rseq,
+                           retain.reads,
+                           get.cPos,
+                           myfuns){
   if(get.cPos==FALSE)
   {
     out=list("intervals"=data.frame(),"epi"=data.frame(),"log"=data.frame())
@@ -305,9 +314,9 @@ epiallele_analyse=function(align, bin, threshold, bisu.Thresh, stranded, mode, r
     out=list("intervals"=data.frame(),"epi"=data.frame(),"log"=data.frame(),"CPos"=data.frame())
   }
   ##############################restituisce gli allineamenti delle reads per la regione di interess
-  reads <-stackStringsFromGAlignments(align, bin)
+  reads <- GenomicAlignments::stackStringsFromGAlignments(align, bin)
   reads <- reads[!duplicated(names(reads))]
-  reads_trunk <- reads[vmatchPattern("+", reads)]
+  reads_trunk <- reads[Biostrings::vmatchPattern("+", reads)]
   reads <- reads[which(reads_trunk@ranges@width == 0)]
   ## Plus
   align_plus= reads[reads@elementMetadata$strand=="+"]
@@ -386,20 +395,30 @@ epiallele_analyse=function(align, bin, threshold, bisu.Thresh, stranded, mode, r
 }
 
 
-epiallele_analyse_Block <- function(df, aln_c, threshold, bisu.Thresh, stranded, mode, remove.Amb, retain.reads, get.cPos, myfuns){
-  foreach (i= 1:nrow(df)) %do% {
-    epiallele_analyse(align= aln_c,
-                      bin = GRanges(df[i,]$seqnames,IRanges(df[i,]$start,df[i,]$end)),
-                      threshold = threshold,
-                      bisu.Thresh = bisu.Thresh,
-                      stranded = stranded,
-                      mode = mode,
-                      remove.Amb = remove.Amb,
-                      rseq = df[i,]$refseq,
-                      retain.reads = retain.reads,
-                      get.cPos = get.cPos,
-                      myfuns = myfuns)
+epiallele_analyse_Block <- function(df,
+                                    aln_c,
+                                    bisu.Thresh,
+                                    stranded,
+                                    mode,
+                                    remove.Amb,
+                                    retain.reads,
+                                    get.cPos,
+                                    myfuns){
+  ret_list = list()
+  for (i in 1:nrow(df)) {
+    ret_list[[i]] = epiallele_analyse(align= aln_c,
+                                      bin = GenomicRanges::GRanges(df[i,]$seqnames,IRanges::IRanges(df[i,]$start,df[i,]$end)),
+                                      threshold = 50,
+                                      bisu.Thresh = bisu.Thresh,
+                                      stranded = stranded,
+                                      mode = mode,
+                                      remove.Amb = remove.Amb,
+                                      rseq = df[i,]$refseq,
+                                      retain.reads = retain.reads,
+                                      get.cPos = get.cPos,
+                                      myfuns = myfuns)
   }
+  return(ret_list)
 }
 
 
