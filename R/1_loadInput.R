@@ -1,6 +1,7 @@
 #' loadInput
 #'
 #' @importFrom Biostrings readDNAStringSet
+#' @importFrom Rsamtools ScanBamParam
 #' @importFrom GenomicAlignments readGAlignments
 #' @importFrom GenomeInfoDb seqlevels
 #' @param bamfile path to bamfile

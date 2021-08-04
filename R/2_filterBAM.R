@@ -2,9 +2,9 @@
 #'
 #' @importFrom GenomeInfoDb keepSeqlevels keepStandardChromosomes dropSeqlevels
 #' @param algn GAlignments object
-#' @param keepStChr logical
-#' @param keepM logical
-#' @param retainChr logical
+#' @param keepStChr Logical indicating if only standard chromosomes should be kept
+#' @param keepM Logical indicating if the mitochondrial chromosome should be kept or not
+#' @param retainChr Vector containing the strings of the chromosomes to be analysed
 #' @return filtered GAlignments object
 #' @export
 

@@ -13,10 +13,10 @@
 #' @export
 
 
-epiStat <- function(sample_list, metadata, cores){
+epiStat <- function(sample_list, metadata, cores = 1){
   list = purrr::map(sample_list, function(x) x %>%
                       dplyr::select(id) %>%
-                      dplyr::distinct %>%
+                      dplyr::distinct() %>%
                       dplyr::mutate(present = TRUE))
   ## names
   filt = list %>%
