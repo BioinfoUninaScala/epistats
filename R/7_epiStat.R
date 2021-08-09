@@ -13,53 +13,63 @@
 #' @export
 
 
-epiStat <- function(sample_list, metadata, cores = 1){
+epiStat <- function(sample_list, metadata, rmUnmeth = FALSE, cores = 1){
   list = purrr::map(sample_list, function(x) x %>%
                       dplyr::select(id) %>%
                       dplyr::distinct() %>%
                       dplyr::mutate(present = TRUE))
-  ## names
+  ## Names
   filt = list %>%
     purrr::reduce(dplyr::full_join, by = "id") %>%
     dplyr::mutate(count_na = rowSums(is.na(.))) %>%
     dplyr::filter(count_na < (length(sample_list)-2))
-  #### filter(!count_na == (length(sample_list)-1))
+  ## Take regions IDs
   regions = filt$id
+  ## Split regions
   regs <- split(regions, (seq(length(regions))-1) %/% (length(regions)/cores))
+  ### Split samples
+  filt_samples <- foreach(reg = regs) %do% {
+    filt = purrr::map(sample_list, ~ dplyr::filter(., id %in% reg))
+  }
+  ## Plan parallel
   future::plan(multisession, workers = cores)
-  prova = regs %>% furrr::future_map_dfr(~allStat(., sample_list, metadata))
-  # prova = mclapply(1:length(regs), function(x) allStat(regs[[x]], sample_list, metadata),
-  #                  mc.cores = cores)
-  # prova = ldply(prova, data.frame)
+  ## Remove warning message
+  options(future.rng.onMisuse = "ignore")
+  ## Call allStat for all the blocks
+  prova = furrr::future_map2_dfr(regs, filt_samples, allStat, metadata, rmUnmeth)
+  ## Remove NAs
   prova = prova[stats::complete.cases(prova)==TRUE,]
+  ## Adjust p-values
   prova$p.adjust = stats::p.adjust(prova$p.value, method = "fdr")
   return(prova)
 }
 
 
-mkmatr <- function(samples, region){
-  filt = purrr::map(samples, ~ dplyr::filter(., id == region))
-  filt = purrr::map(filt, ~ dplyr::select(., 1:2))
-  counts = filt %>% purrr::reduce(dplyr::full_join, by = "Var1")
-  rownames(counts)= counts$Var1
-  counts$Var1=NULL
+getEpimatrix <- function(samples, region){
+  filt <- purrr::map(samples, ~ dplyr::filter(., id == region))
+  filt <- filt %>% purrr::map(select, 1:2)
+  counts <- filt %>% purrr::reduce(dplyr::full_join, by = "Var1")
+  epinames = counts$Var1
+  counts$Var1 = NULL
   colnames(counts) = names(samples)
   data = as.data.frame(t(counts))
+  colnames(data) = epinames
   data[is.na(data)] = 0
-  data = data %>% dplyr::filter(., !rowSums(.) == 0)
+  data = data %>% dplyr::filter(!rowSums(.) == 0)
   return(data)
 }
 
-
-oneStat <- function(sample_list, region, metadata){
-  data <- mkmatr(sample_list, region)
-  #data = data[!rowSums(data)== 0,]
+oneStat <- function(sample_list, region, metadata, rmUnmeth){
+  data <- getEpimatrix(sample_list, region)
+  if(rmUnmeth == TRUE){
+    data <- data[grep("1", colnames(data))]
+  }
   dist = vegan::vegdist(data, method="bray")
   metadata = metadata %>%
-    filter(., Samples %in% rownames(data))
+    filter(Samples %in% rownames(data))
   if(length(unique(metadata$Group)) > 1){
     ## problema formula
-    p= vegan::adonis2(dist ~ Group, data = metadata)
+    p <- suppressMessages(adonis2(dist ~ Group, data = metadata))
     result= data.frame("Region"= region,
                        "F.statistics"= p$F[1],
                        "p.value" = p$`Pr(>F)`[1])
@@ -72,7 +82,7 @@ oneStat <- function(sample_list, region, metadata){
 }
 
 
-allStat <- function(regions, sample_list, metadata){
-  filt = purrr::map(sample_list, ~ dplyr::filter(., id %in% regions))
-  out = regions %>% map_dfr(~ oneStat(filt, .x, metadata))
+allStat <- function(regions, sample_list, metadata, rmUnmeth){
+  out = regions %>% map_dfr(~ oneStat(sample_list, .x, metadata, rmUnmeth))
+  return(out)
 }
