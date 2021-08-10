@@ -1,7 +1,7 @@
 #' epiStat
 #'
 #' @importFrom purrr map reduce map_dfr
-#' @importFrom dplyr select distinct mutate full_join filter
+#' @importFrom dplyr select distinct mutate full_join filter group_by summarize
 #' @importFrom future plan
 #' @importFrom furrr future_map2_dfr
 #' @importFrom foreach foreach
@@ -68,18 +68,24 @@ oneStat <- function(sample_list, region, metadata, rmUnmeth){
     dist = vegan::vegdist(data, method="bray")
     metadata = metadata %>%
       filter(Samples %in% rownames(data))
+    check <- metadata %>%
+               dplyr::group_by(Group) %>%
+                    dplyr::summarize(count = length(Group))
+    check$reps <- paste(check$Group, check$count, sep = ":")
     if(length(unique(metadata$Group)) > 1){
       ## problema formula
       p <- suppressMessages(adonis2(dist ~ Group, data = metadata))
       result= data.frame("Region" = region,
                          "F.statistics" = p$F[1],
                          "p.value" = p$`Pr(>F)`[1],
-                         "num_EpiSpecies" = length(colnames(data)))
+                         "num_EpiSpecies" = length(colnames(data)),
+                         "num_Reps" = paste(check$reps, collapse = ","))
     } else {
       result = data.frame("Region" = region,
                           "F.statistics" = NA,
                           "p.value" = NA,
-                          "num_EpiSpecies" = NA)
+                          "num_EpiSpecies" = NA,
+                          "num_Reps" = NA)
     }
   return(result)
 }

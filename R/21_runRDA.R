@@ -8,10 +8,13 @@
 #' @return PCA plot
 #' @export
 
-runRDA <- function(samples, region){
+runRDA <- function(samples, region, printData = FALSE){
   data <- getEpimatrix(samples, region)
   myrda <- vegan::rda(data)
   p <- biplot(myrda, scaling = "symmetric")
+  if(printData == TRUE){
+    print(data)
+  }
   return(p)
 }
 

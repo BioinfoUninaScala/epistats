@@ -1,7 +1,7 @@
 #' oneTest
 #'
 #' @importFrom purrr map reduce
-#' @importFrom dplyr select full_join filter
+#' @importFrom dplyr select full_join filter group_by summarize
 #' @param sample_list list of samples epiMatrices coming from epiAnalysis function
 #' @param region genomic coordinate of your region of interest
 #' @param metadata dataframe. Your samples metadata
@@ -16,10 +16,10 @@ oneTest <- function(sample_list, region, metadata, rmUnmeth = FALSE, printData =
   }
   dist = vegan::vegdist(data, method="bray")
   metadata <- metadata %>%
-    filter(Samples %in% rownames(data))
+           dplyr::filter(Samples %in% rownames(data))
   check <- metadata %>%
-             group_by(Group) %>%
-                summarize(count = length(Group))
+              dplyr::group_by(Group) %>%
+                 dplyr::summarize(count = length(Group))
   check$reps <- paste(check$Group, check$count, sep = ":")
   if(length(unique(metadata$Group)) > 1){
     ## problema formula

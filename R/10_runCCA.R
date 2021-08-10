@@ -10,7 +10,7 @@
 #' @export
 
 
-runCCA <- function(samples, region, metadata){
+runCCA <- function(samples, region, metadata, printData = FALSE){
   data <- getEpimatrix(samples, region)
   metadata = metadata %>%
     dplyr::filter(Samples %in% rownames(data))
@@ -21,6 +21,9 @@ runCCA <- function(samples, region, metadata){
   pl <- with(metadata, vegan::ordiellipse(mod, Group, kind = "se", conf = 0.95,
                                           lwd = 2, draw = "polygon", col = 1:4,
                                           border = 1:4, alpha = 63))
+  if(printData == TRUE){
+    print(data)
+  }
   return(pl)
 }
 
