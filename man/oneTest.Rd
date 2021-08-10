@@ -4,7 +4,15 @@
 \alias{oneTest}
 \title{oneTest}
 \usage{
-oneTest(sample_list, region, metadata, rmUnmeth = FALSE, printData = FALSE)
+oneTest(
+  sample_list,
+  region,
+  metadata,
+  rmUnmeth = FALSE,
+  minGroups = 2,
+  minSampleSize = 2,
+  printData = FALSE
+)
 }
 \arguments{
 \item{sample_list}{list of samples epiMatrices coming from epiAnalysis function}

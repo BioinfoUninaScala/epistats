@@ -4,7 +4,14 @@
 \alias{epiStat}
 \title{epiStat}
 \usage{
-epiStat(sample_list, metadata, rmUnmeth = FALSE, cores = 1)
+epiStat(
+  sample_list,
+  metadata,
+  rmUnmeth = FALSE,
+  cores = 1,
+  minGroups = 2,
+  minSampleSize = 2
+)
 }
 \arguments{
 \item{sample_list}{list of epiMatrix coming from epiAnalysis}
