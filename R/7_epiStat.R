@@ -3,7 +3,8 @@
 #' @importFrom purrr map reduce map_dfr
 #' @importFrom dplyr select distinct mutate full_join filter
 #' @importFrom future plan
-#' @importFrom furrr future_map_dfr
+#' @importFrom furrr future_map2_dfr
+#' @importFrom foreach foreach
 #' @importFrom stats complete.cases p.adjust
 #' @importFrom vegan vegdist adonis2
 #' @param sample_list list of epiMatrix coming from epiAnalysis
@@ -28,7 +29,7 @@ epiStat <- function(sample_list, metadata, rmUnmeth = FALSE, cores = 1){
   ## Split regions
   regs <- split(regions, (seq(length(regions))-1) %/% (length(regions)/cores))
   ### Split samples
-  filt_samples <- foreach(reg = regs) %do% {
+  filt_samples <- foreach::foreach(reg = regs) %do% {
     filt = purrr::map(sample_list, ~ dplyr::filter(., id %in% reg))
   }
   ## Plan parallel
@@ -43,7 +44,6 @@ epiStat <- function(sample_list, metadata, rmUnmeth = FALSE, cores = 1){
   prova$p.adjust = stats::p.adjust(prova$p.value, method = "fdr")
   return(prova)
 }
-
 
 getEpimatrix <- function(samples, region){
   filt <- purrr::map(samples, ~ dplyr::filter(., id == region))
@@ -63,21 +63,24 @@ oneStat <- function(sample_list, region, metadata, rmUnmeth){
   data <- getEpimatrix(sample_list, region)
   if(rmUnmeth == TRUE){
     data <- data[grep("1", colnames(data))]
-  }
-  dist = vegan::vegdist(data, method="bray")
-  metadata = metadata %>%
-    filter(Samples %in% rownames(data))
-  if(length(unique(metadata$Group)) > 1){
-    ## problema formula
-    p <- suppressMessages(adonis2(dist ~ Group, data = metadata))
-    result= data.frame("Region"= region,
-                       "F.statistics"= p$F[1],
-                       "p.value" = p$`Pr(>F)`[1])
-  } else {
-    result = data.frame("Region"= region,
-                        "F.statistics"= NA,
-                        "p.value" = NA)
-  }
+    data <- data %>% dplyr::filter(!rowSums(.) == 0)
+    }
+    dist = vegan::vegdist(data, method="bray")
+    metadata = metadata %>%
+      filter(Samples %in% rownames(data))
+    if(length(unique(metadata$Group)) > 1){
+      ## problema formula
+      p <- suppressMessages(adonis2(dist ~ Group, data = metadata))
+      result= data.frame("Region" = region,
+                         "F.statistics" = p$F[1],
+                         "p.value" = p$`Pr(>F)`[1],
+                         "num_EpiSpecies" = length(colnames(data)))
+    } else {
+      result = data.frame("Region" = region,
+                          "F.statistics" = NA,
+                          "p.value" = NA,
+                          "num_EpiSpecies" = NA)
+    }
   return(result)
 }
 
