@@ -8,25 +8,36 @@
 #' @return Dataframe with statistics
 #' @export
 
-oneTest <- function(sample_list, region, metadata, rmUnmeth = FALSE){
+oneTest <- function(sample_list, region, metadata, rmUnmeth = FALSE, printData = FALSE){
   data <- getEpimatrix(sample_list, region)
   if(rmUnmeth == TRUE){
     data <- data[grep("1", colnames(data))]
     data = data %>% dplyr::filter(!rowSums(.) == 0)
   }
   dist = vegan::vegdist(data, method="bray")
-  metadata = metadata %>%
+  metadata <- metadata %>%
     filter(Samples %in% rownames(data))
+  check <- metadata %>%
+             group_by(Group) %>%
+                summarize(count = length(Group))
+  check$reps <- paste(check$Group, check$count, sep = ":")
   if(length(unique(metadata$Group)) > 1){
     ## problema formula
     p <- suppressMessages(adonis2(dist ~ Group, data = metadata))
     result= data.frame("Region"= region,
                        "F.statistics"= p$F[1],
-                       "p.value" = p$`Pr(>F)`[1])
+                       "p.value" = p$`Pr(>F)`[1],
+                       "num_EpiSpecies" = length(colnames(data)),
+                       "num_Reps" = paste(check$reps, collapse = ","))
   } else {
     result = data.frame("Region"= region,
                         "F.statistics"= NA,
-                        "p.value" = NA)
+                        "p.value" = NA,
+                        "num_EpiSpecies" = NA,
+                        "num_Reps" = NA)
+  }
+  if(printData == TRUE){
+    print(data)
   }
   return(result)
 }
