@@ -12,19 +12,23 @@
 
 runCCA <- function(samples, region, metadata, printData = FALSE){
   data <- getEpimatrix(samples, region)
-  metadata = metadata %>%
-    dplyr::filter(Samples %in% rownames(data))
-  mod <- vegan::cca(data ~ Group, metadata)
-  plot(mod, type="n", display = "sites")
-  with(metadata, text(mod, display="sites", labels = as.character(Group),
-                      col=as.numeric(Group)))
-  pl <- with(metadata, vegan::ordiellipse(mod, Group, kind = "se", conf = 0.95,
-                                          lwd = 2, draw = "polygon", col = 1:4,
-                                          border = 1:4, alpha = 63))
-  if(printData == TRUE){
-    print(data)
+  if(length(colnames(data)) <= 1){
+    print("Plotting is not possible with just one epiallele specie")
+  } else {
+    metadata = metadata %>%
+      dplyr::filter(Samples %in% rownames(data))
+    mod <- vegan::cca(data ~ Group, metadata)
+    plot(mod, type="n", display = "sites")
+    with(metadata, text(mod, display="sites", labels = as.character(Group),
+                        col=as.numeric(Group)))
+    pl <- with(metadata, vegan::ordiellipse(mod, Group, kind = "se", conf = 0.95,
+                                            lwd = 2, draw = "polygon", col = 1:4,
+                                            border = 1:4, alpha = 63))
+    if(printData == TRUE){
+      print(data)
+    }
+    return(pl)
   }
-  return(pl)
 }
 
 

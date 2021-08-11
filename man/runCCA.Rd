@@ -4,7 +4,7 @@
 \alias{runCCA}
 \title{runCCA}
 \usage{
-runCCA(samples, region, metadata)
+runCCA(samples, region, metadata, printData = FALSE)
 }
 \arguments{
 \item{samples}{list of epimatrices}

@@ -14,7 +14,6 @@ oneTest <- function(sample_list, region, metadata, rmUnmeth = FALSE, minGroups =
     data <- data[grep("1", colnames(data))]
     data = data %>% dplyr::filter(!rowSums(.) == 0)
   }
-  dist = vegan::vegdist(data, method="bray")
   groups = unique(metadata$Group)
   metadata <- metadata %>%
            dplyr::filter(Samples %in% rownames(data))
@@ -23,7 +22,9 @@ oneTest <- function(sample_list, region, metadata, rmUnmeth = FALSE, minGroups =
                  dplyr::summarize(count = length(Group))
   check <- check[check$count >= minSampleSize,]
   metadata <- metadata[metadata$Group %in% check$Group,]
-  data <- data[rownames(data) %in% metadata$Samples,]
+  data <- data %>%
+       dplyr::filter(rownames(.) %in% metadata$Samples)
+  dist = vegan::vegdist(data, method="bray")
   if(length(unique(metadata$Group)) >= minGroups){
     a = groups %>% purrr::map_dbl(~ length(metadata$Samples[metadata$Group == .x]))
     a = t(as.data.frame(a, row.names = groups))

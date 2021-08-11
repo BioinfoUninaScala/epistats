@@ -4,7 +4,7 @@
 \alias{runRDA}
 \title{runRDA}
 \usage{
-runRDA(samples, region)
+runRDA(samples, region, printData = FALSE)
 }
 \arguments{
 \item{samples}{list of epimatrices}

@@ -10,12 +10,16 @@
 
 runRDA <- function(samples, region, printData = FALSE){
   data <- getEpimatrix(samples, region)
-  myrda <- vegan::rda(data)
-  p <- biplot(myrda, scaling = "symmetric")
-  if(printData == TRUE){
-    print(data)
+  if(length(colnames(data)) <= 1){
+    print("Plotting is not possible with just one epiallele specie")
+  } else {
+    myrda <- vegan::rda(data)
+    p <- biplot(myrda, scaling = "symmetric")
+    if(printData == TRUE){
+      print(data)
+    }
+    return(p)
   }
-  return(p)
 }
 
 getEpimatrix <- function(samples, region){
