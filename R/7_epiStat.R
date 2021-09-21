@@ -7,14 +7,23 @@
 #' @importFrom foreach foreach
 #' @importFrom stats complete.cases p.adjust
 #' @importFrom vegan vegdist adonis2
-#' @param sample_list list of epiMatrix coming from epiAnalysis
-#' @param metadata samples metadata
+#' @importFrom plyranges as_granges reduce_ranges group_by
+#' @importFrom tidyr separate as_tibble
+#' @param sample_list list of epiMatrix coming from epiAnalysis function
+#' @param metadata dataframe. Your samples metadata
+#' @param rmUnmeth logical indicating if 0 methylated species should be removed of not from the analysis
 #' @param cores num of cores
-#' @return dataframe w/ stats
+#' @param minGroups integer indicating the minimum number of unique Groups should be used for the dissimilarity analysis among samples
+#' @param minSampleSize integer indicating the minimum number of samples per group needed to perform the statistical analysis
+#' @param reduce logical indicating if intervals with the same statistics should be reduced or not
+#' @return dataframe with rows indicating the genomic regions analysed and columns containing the statistics
 #' @export
 
 
-epiStat <- function(sample_list, metadata, rmUnmeth = FALSE, cores = 1, minGroups = 2, minSampleSize = 2){
+epiStat <- function(sample_list, metadata,
+                    rmUnmeth = FALSE, cores = 1,
+                    minGroups = 2, minSampleSize = 2, reduce = FALSE){
+
   list = purrr::map(sample_list, function(x) x %>%
                       dplyr::select(id) %>%
                       dplyr::distinct() %>%
@@ -37,11 +46,36 @@ epiStat <- function(sample_list, metadata, rmUnmeth = FALSE, cores = 1, minGroup
   ## Remove warning message
   options(future.rng.onMisuse = "ignore")
   ## Call allStat for all the blocks
-  prova = furrr::future_map2_dfr(regs, filt_samples, allStat, metadata, rmUnmeth, minGroups, minSampleSize)
+  prova = furrr::future_map2_dfr(regs, filt_samples, allStat,
+                                 metadata, rmUnmeth, minGroups, minSampleSize)
+  ##  Release cores
+  future::plan(sequential)
   ## Remove NAs
   prova = prova[stats::complete.cases(prova)==TRUE,]
   ## Adjust p-values
-  prova$p.adjust = stats::p.adjust(prova$p.value, method = "fdr")
+  prova = prova %>% mutate(p.adjust = p.adjust(p.value, method = "fdr"), .after = p.value)
+  ## Separate columns
+  prova = prova %>%
+    tidyr::separate(id, c("seqnames", "start", "end"), "_",
+                    remove = FALSE, convert = TRUE)
+  ## Reduce intervals
+  if(reduce == TRUE){
+    # Take groups names
+    groups = colnames(prova[9:ncol(prova)])
+    # Paste replicates number
+    prova$replicates = do.call(paste, c(prova[9:ncol(prova)], sep = "_"))
+    # Convert in granges
+    gr = plyranges::as_granges(prova)
+    # Group by all the statistcs and reduce ranges
+    gr = gr %>% plyranges::group_by(F.statistics, p.value, num_EpiSpecies, replicates) %>%
+      plyranges::reduce_ranges()
+    # Convert again into a tibble
+    prova = tidyr::as_tibble(gr)
+    # Create the id column
+    prova= prova %>% separate(replicates, groups, sep = "_") %>%
+      mutate(id = paste(seqnames, start, end, sep = "_"), .before = seqnames) %>%
+      mutate(p.adjust = p.adjust(p.value, method = "fdr"), .after = p.value)
+  }
   return(prova)
 }
 
@@ -81,7 +115,7 @@ oneStat <- function(sample_list, region, metadata, rmUnmeth, minGroups, minSampl
       a = t(as.data.frame(a, row.names = groups))
       rownames(a) = NULL
       p <- suppressMessages(adonis2(dist ~ Group, data = metadata))
-      result = data.frame("Region" = region,
+      result = data.frame("id" = region,
                          "F.statistics" = p$F[1],
                          "p.value" = p$`Pr(>F)`[1],
                          "num_EpiSpecies" = length(colnames(data)))
@@ -90,7 +124,7 @@ oneStat <- function(sample_list, region, metadata, rmUnmeth, minGroups, minSampl
       b = rep(NA, length(groups))
       b = t(as.data.frame(b, row.names = groups))
       rownames(b) = NULL
-      result = data.frame("Region" = region,
+      result = data.frame("id" = region,
                           "F.statistics" = NA,
                           "p.value" = NA,
                           "num_EpiSpecies" = NA)
@@ -104,3 +138,5 @@ allStat <- function(regions, sample_list, metadata, rmUnmeth, minGroups, minSamp
   out = regions %>% map_dfr(~ oneStat(sample_list, .x, metadata, rmUnmeth, minGroups, minSampleSize))
   return(out)
 }
+
+

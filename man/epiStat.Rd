@@ -10,18 +10,27 @@ epiStat(
   rmUnmeth = FALSE,
   cores = 1,
   minGroups = 2,
-  minSampleSize = 2
+  minSampleSize = 2,
+  reduce = FALSE
 )
 }
 \arguments{
-\item{sample_list}{list of epiMatrix coming from epiAnalysis}
+\item{sample_list}{list of epiMatrix coming from epiAnalysis function}
 
-\item{metadata}{samples metadata}
+\item{metadata}{dataframe. Your samples metadata}
+
+\item{rmUnmeth}{logical indicating if 0 methylated species should be removed of not from the analysis}
 
 \item{cores}{num of cores}
+
+\item{minGroups}{integer indicating the minimum number of unique Groups should be used for the dissimilarity analysis among samples}
+
+\item{minSampleSize}{integer indicating the minimum number of samples per group needed to perform the statistical analysis}
+
+\item{reduce}{logical indicating if intervals with the same statistics should be reduced or not}
 }
 \value{
-dataframe w/ stats
+dataframe with rows indicating the genomic regions analysed and columns containing the statistics
 }
 \description{
 epiStat

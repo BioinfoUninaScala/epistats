@@ -9,15 +9,18 @@
 #' @export
 
 testShannon <- function(intervals_list, metadata){
+  ### It filter the data frames in intervals_list and
+  ### it produces a unique tibble with as many objects as the genomic regions are
+  ### and the samples as column names filled with Shan entropy values
   regs <- intervals_list %>% purrr::map(dplyr::filter, num_reads >= 50) %>%
                              purrr::map(dplyr::mutate, shanNorm = shannon / num_cg ,
                                          id = paste(seqnames, start, end, sep = "_")) %>%
                              purrr::map(dplyr::filter, !duplicated(id)) %>%
                              purrr::map(dplyr::select, id, shanNorm) %>%
                              purrr::reduce(dplyr::full_join, by= "id")
-
+  ### It gives the columns names
   colnames(regs)[2:ncol(regs)] <- names(intervals_list)
-
+  ### Filter regions in order to keep only the one that can be analysed (shan values present in at least groups, each containing two samples)
   filtered <- regs %>% tidyr::pivot_longer(cols = 2:ncol(.)) %>%
                         dplyr::filter(!rowSums(is.na(.)) > 0) %>%
                         dplyr::group_by(id) %>%
@@ -30,9 +33,9 @@ testShannon <- function(intervals_list, metadata){
                         dplyr::filter(groups >= 2 & samples >= 2) %>%
                         dplyr::ungroup() %>%
                         dplyr::select(1:4)
-
+  ### It performs the test for each region (wilcoxon if there are only two groups, otherwise the kruskal one)
   res <- filtered %>% dplyr::nest_by(id) %>%
-                      dplyr::mutate(test = ifelse(dplyr::n_distinct(data$Group) == 2,
+                      dplyr::mutate(p.value = ifelse(dplyr::n_distinct(data$Group) == 2,
                                                   wilcox.test(value ~ Group, data = data)$p.value,
                                                   kruskal.test(value ~ Group, data = data)$p.value),
                                     type = ifelse(dplyr::n_distinct(data$Group) == 2,
@@ -40,11 +43,11 @@ testShannon <- function(intervals_list, metadata){
                                                   "kruskal.test")) %>%
                       tidyr::unnest(id) %>%
                       dplyr::ungroup() %>%
-                      dplyr::select(1,3,4) %>%
-                      tidyr::separate(id, c("chr", "start", "end"), "_", remove = FALSE) %>%
-                      dplyr::filter(is.numeric(test) == TRUE)
-
-  res$p.adjust <- p.adjust(res$test, method = "fdr")
+                      dplyr::select(1,4,3) %>%
+                      tidyr::separate(id, c("seqnames", "start", "end"), "_", remove = FALSE) %>%
+                      dplyr::filter(is.numeric(p.value) == TRUE)
+  ### It adjusts p.values
+  res$p.adjust <- p.adjust(res$p.value, method = "fdr")
 
   return(res)
 }
