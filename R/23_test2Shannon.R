@@ -1,7 +1,7 @@
 #' test2Shannon
 #'
 #' @importFrom purrr map reduce
-#' @importFrom dplyr filter mutate select full_join group_by left_join ungroup nest_by summarise
+#' @importFrom dplyr filter mutate select full_join group_by left_join ungroup nest_by summarise count
 #' @importFrom tidyr pivot_longer separate unnest
 #' @importFrom broom tidy
 #' @param intervals_list list of samples intervals. It corresponds to the output 'epi' from the epiAnalysis function
@@ -31,16 +31,16 @@ test2Shannon <- function(intervals_list, metadata){
   totest <- check %>% tidyr::pivot_longer(cols = 2:ncol(check)) %>%
     dplyr::filter(!rowSums(is.na(.)) > 0) %>%
     dplyr::group_by(id) %>%
-    dplyr::left_join(., metadata, by = c("name" = "Samples")) %>% ungroup()
+    dplyr::left_join(., metadata, by = c("name" = "Samples")) %>% dplyr::ungroup()
   # Filter step to select only regions that have shan values for at least 2 points, each with 2 samples
-  filt_step <- totest %>% group_by(id, Group) %>% count(Points) %>%
-    ungroup() %>% filter(n >= 2) %>%
-    group_by(id, Group) %>% count() %>%
-    ungroup %>% filter(n >= 2) %>%
-    group_by(id) %>% count() %>%
-    ungroup() %>% filter(n >= 2)
+  filt_step <- totest %>% dplyr::group_by(id, Group) %>% dplyr::count(Points) %>%
+    dplyr::ungroup() %>% dplyr::filter(n >= 2) %>%
+    dplyr::group_by(id, Group) %>% dplyr::count() %>%
+    dplyr::ungroup() %>% dplyr::filter(n >= 2) %>%
+    dplyr::group_by(id) %>% dplyr::count() %>%
+    dplyr::ungroup() %>% dplyr::filter(n >= 2)
   # It selects from totest only the regions that passed the filter
-  totest <- totest %>% ungroup() %>% filter(id %in% filt_step$id)
+  totest <- totest %>% dplyr::ungroup() %>% dplyr::filter(id %in% filt_step$id)
   ##
   tests <- totest %>% dplyr::nest_by(id) %>%
     dplyr::mutate(Model = list(aov(value ~ Points*Group, data = data))) %>%

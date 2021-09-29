@@ -14,5 +14,5 @@ LazyData: true
 Imports: Biostrings, GenomicAlignments, GenomeInfoDb, GenomicRanges, IRanges, 
          parallel, S4Vectors, BSgenome, foreach, future, furrr, purrr, XVector,
          dplyr, stats, vegan, pairwiseAdonis, progressr, progress, magrittr, Rsamtools, tidyr, 
-         broom, seq2pathway, plyranges
+         broom, seq2pathway, plyranges, doMC
 RoxygenNote: 7.1.1

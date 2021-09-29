@@ -67,18 +67,17 @@ epiAnalysis= function(align,
     }
 
     options(future.globals.maxSize = max(regs %>% purrr::map_dbl(object.size)) * 1.2)
-
-    future::plan(multisession,workers=cores)
-
-    progressr::handlers(global = TRUE)
-    progressr::handlers("progress", "beepr")
-
-    Mapi <- furrr::future_map2(df_split, regs, epiallele_analyse_Block,
-                                               bisu.Thresh, stranded,
-                                               mode, remove.Amb, retain.reads,
-                                               get.cPos, myfuns)
-
+    ## Plan parallel
+    doMC::registerDoMC(cores = cores)
+    ## Run epiallele_analyse on all blocks of regions
+    Mapi = foreach(a = df_split, b = regs) %dopar% {
+      block = epiallele_analyse_Block(a, b, bisu.Thresh, stranded, mode, remove.Amb, retain.reads, get.cPos, myfuns)
+    }
+    ## Release cores
+    foreach::registerDoSEQ()
+    ## Unlist dataframes
     Mapi <- unlist(Mapi, recursive = FALSE)
+    ##
     intervals <- Mapi %>% purrr::map_df(~ .$intervals)
     epi <- Mapi %>% purrr::map_df(~ .$epi)
     log <- Mapi %>% purrr::map_df(~ .$log)

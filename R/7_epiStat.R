@@ -4,11 +4,12 @@
 #' @importFrom dplyr select distinct mutate full_join filter group_by summarize
 #' @importFrom future plan
 #' @importFrom furrr future_map2_dfr
-#' @importFrom foreach foreach
+#' @importFrom foreach foreach registerDoSEQ %dopar%
 #' @importFrom stats complete.cases p.adjust
 #' @importFrom vegan vegdist adonis2
 #' @importFrom plyranges as_granges reduce_ranges group_by
 #' @importFrom tidyr separate as_tibble
+#' @importFrom doMC registerDoMC
 #' @param sample_list list of epiMatrix coming from epiAnalysis function
 #' @param metadata dataframe. Your samples metadata
 #' @param rmUnmeth logical indicating if 0 methylated species should be removed of not from the analysis
@@ -42,14 +43,15 @@ epiStat <- function(sample_list, metadata,
     filt = purrr::map(sample_list, ~ dplyr::filter(., id %in% reg))
   }
   ## Plan parallel
-  future::plan(multisession, workers = cores)
-  ## Remove warning message
-  options(future.rng.onMisuse = "ignore")
-  ## Call allStat for all the blocks
-  prova = furrr::future_map2_dfr(regs, filt_samples, allStat,
-                                 metadata, rmUnmeth, minGroups, minSampleSize)
-  ##  Release cores
-  future::plan(sequential)
+  doMC::registerDoMC(cores = cores)
+  ## Run allStat on all the blocks
+  prova = foreach::foreach(a = regs, b = filt_samples) %dopar% {
+      block = allStat(a, b, metadata, rmUnmeth, minGroups, minSampleSize)
+  }
+  ## Release cores
+  foreach::registerDoSEQ()
+  ## Bind all dataframes
+  prova = prova %>% map_df(~.)
   ## Remove NAs
   prova = prova[stats::complete.cases(prova)==TRUE,]
   ## Adjust p-values
@@ -138,5 +140,7 @@ allStat <- function(regions, sample_list, metadata, rmUnmeth, minGroups, minSamp
   out = regions %>% map_dfr(~ oneStat(sample_list, .x, metadata, rmUnmeth, minGroups, minSampleSize))
   return(out)
 }
+
+
 
 
