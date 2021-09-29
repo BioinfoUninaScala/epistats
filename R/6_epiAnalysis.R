@@ -1,7 +1,7 @@
 #' epiAnalysis
 #'
 #' @importFrom BSgenome getSeq
-#' @importFrom foreach foreach %do%
+#' @importFrom foreach foreach %do% %dopar% registerDoSEQ
 #' @importFrom future plan multisession
 #' @importFrom furrr future_map2
 #' @importFrom purrr map_df map_dbl
@@ -13,6 +13,7 @@
 #' @importFrom IRanges IRanges subsetByOverlaps
 #' @importFrom magrittr %>%
 #' @importFrom progressr handlers
+#' @importFrom doMC registerDoMC
 #' @param align GAlignments object
 #' @param bin intervals from makeWindows or makeEpialleles
 #' @param aname character indicating the analysis name
