@@ -16,7 +16,14 @@
 #' @return GRanges
 #' @export
 
-makeWindows <- function(gr, window, step, Genome, mode, min.C, max.C, cores){
+makeWindows <- function(gr,
+                        Genome,
+                        window = 50,
+                        step = 1,
+                        mode = "CG",
+                        min.C = 1,
+                        max.C = 50,
+                        cores = 1){
   ##split gr in sliding windows
   windows <- GenomicRanges::slidingWindows(gr, window, step)
   if (mode=="CG")
@@ -39,15 +46,16 @@ makeWindows <- function(gr, window, step, Genome, mode, min.C, max.C, cores){
 
 filterWindows = function(windows,
                          Genome,
-                         mode,min.C,
+                         mode,
+                         min.C,
                          max.C,
                          cores)
 {
   ###find cmode coordinates in the Genome
   c_pos <- findPattern(Genome,cores=cores,mode=mode)
   #####filters windows with a number of cmode in the user supplied range
-  windows_filt <- windows[GenomicRanges::countOverlaps(windows, c_pos)>=min.C]
-  windows_filt <- windows_filt[GenomicRanges::countOverlaps(windows_filt, c_pos)<=max.C]
+  windows_filt <- windows[GenomicRanges::countOverlaps(windows, c_pos, minoverlap = 2)>=min.C]
+  windows_filt <- windows_filt[GenomicRanges::countOverlaps(windows_filt, c_pos, minoverlap = 2)<=max.C]
   #####select Cmode ranges that fall within the selected windows
   c_pos <- c_pos[GenomicRanges::countOverlaps(c_pos, windows_filt)>0]
   return(list("windows_filt"=windows_filt, "c_pos"=c_pos))
@@ -64,3 +72,6 @@ findPattern <- function(Genome, cores, mode="CG"){
     )
   )
 }
+
+
+

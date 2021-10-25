@@ -1,19 +1,17 @@
 #' epiAnalysis
 #'
 #' @importFrom BSgenome getSeq
-#' @importFrom foreach foreach %do% %dopar% registerDoSEQ
-#' @importFrom future plan multisession
-#' @importFrom furrr future_map2
-#' @importFrom purrr map_df map_dbl
+#' @importFrom foreach foreach %do% %dopar%
+#' @importFrom purrr map_df
 #' @importFrom Biostrings vmatchPattern matchPattern reverseComplement DNAString strsplit
 #' @importFrom XVector subseq
 #' @importFrom GenomicAlignments stackStringsFromGAlignments
-#' @importFrom progress progress_bar
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges subsetByOverlaps
 #' @importFrom magrittr %>%
-#' @importFrom progressr handlers
-#' @importFrom doMC registerDoMC
+#' @importFrom parallel makeCluster stopCluster
+#' @importFrom doParallel registerDoParallel
+#' @importFrom tidyr as_tibble
 #' @param align GAlignments object
 #' @param bin intervals from makeWindows or makeEpialleles
 #' @param aname character indicating the analysis name
@@ -59,23 +57,17 @@ epiAnalysis= function(align,
 
     df_split <- split(df, (seq(nrow(df))-1) %/% (nrow(df)/cores))
 
-    pb <- progress::progress_bar$new(total = cores)
-
     regs <- foreach::foreach (dfi = df_split) %do% {
-      pb$tick()
       region = GenomicRanges::GRanges(dfi$seqnames, IRanges::IRanges(dfi$start,dfi$end))
       IRanges::subsetByOverlaps(align, region)
     }
-
-    options(future.globals.maxSize = max(regs %>% purrr::map_dbl(object.size)) * 1.2)
     ## Plan parallel
-    doMC::registerDoMC(cores = cores)
-    ## Run epiallele_analyse on all blocks of regions
-    Mapi = foreach(a = df_split, b = regs) %dopar% {
-      block = epiallele_analyse_Block(a, b, bisu.Thresh, stranded, mode, remove.Amb, retain.reads, get.cPos, myfuns)
+    cl <- parallel::makeCluster(cores, type = 'PSOCK')
+    doParallel::registerDoParallel(cl)
+    Mapi = foreach::foreach(a = df_split, b = regs, .verbose = TRUE) %dopar% {
+      block = epiallele_analyse_Block(a, b, threshold, bisu.Thresh, stranded, mode, remove.Amb, retain.reads, get.cPos, myfuns)
     }
-    ## Release cores
-    foreach::registerDoSEQ()
+    parallel::stopCluster(cl)
     ## Unlist dataframes
     Mapi <- unlist(Mapi, recursive = FALSE)
     ##
@@ -336,10 +328,10 @@ epiallele_analyse=function(align,
     if(bin@strand@values =="*" & (length(align_minus)>0 & length(align_plus)>0))
     {
       cPos=get_cPos(rseq, mode,"*",bisu.Thresh)
-      data_plus=get_epiMatrix(align_plus, bisu.Thresh, remove.Amb, cPos[[1]], cPos[[2]], strand = "plus", retain.reads = retain.reads, mode)
-      data_minus=get_epiMatrix(align_minus, bisu.Thresh, remove.Amb, cPos[[3]], cPos[[4]], strand = "minus", retain.reads = retain.reads, mode)
+      data_plus=tidyr::as_tibble(get_epiMatrix(align_plus, bisu.Thresh, remove.Amb, cPos[[1]], cPos[[2]], strand = "plus", retain.reads = retain.reads, mode))
+      data_minus=tidyr::as_tibble(get_epiMatrix(align_minus, bisu.Thresh, remove.Amb, cPos[[3]], cPos[[4]], strand = "minus", retain.reads = retain.reads, mode))
       ###se tutte le reads sono filtrate per ambthresh o bisulfito, scrive bin nel log
-      if (dim(data_plus)[1]==0 & dim(data_minus)[1]==0)
+      if (dim(data_plus)[1]==0 & dim(data_minus)[1]==0 | dim(data_plus)[1]+dim(data_minus)[1] < threshold)
       {
         out[["log"]]=as.data.frame(bin)
       }else{
@@ -350,17 +342,17 @@ epiallele_analyse=function(align,
             names(data_minus)=names(data_plus)
           }
           data=rbind(data_plus,data_minus)
-          names(data)=unlist(cPos[[1]])
+          colnames(data)=unlist(cPos[[1]])
           out=get_out(data, out, "*", bin, get.cPos, myfuns)
         }else{
           if(dim(data_plus)[1]>0)
           {
-            names(data_plus)=unlist(cPos[[1]])
+            colnames(data_plus)=unlist(cPos[[1]])
             out=get_out(data_plus, out, "+", bin, get.cPos, myfuns)
           }
           if(dim(data_minus)[1]>0)
           {
-            names(data_minus)=unlist(cPos[[3]])
+            colnames(data_minus)=unlist(cPos[[3]])
             out=get_out(data_minus, out, "-", bin, get.cPos, myfuns)
           }
         }
@@ -370,23 +362,23 @@ epiallele_analyse=function(align,
              bin@strand@values =="+")
     {
       cPos=get_cPos(rseq,mode,"plus",bisu.Thresh)
-      data_plus=get_epiMatrix(align_plus, bisu.Thresh, remove.Amb, cPos[[1]], cPos[[2]], "plus", retain.reads, mode)
-      if (dim(data_plus)[1]==0)
+      data_plus=tidyr::as_tibble(get_epiMatrix(align_plus, bisu.Thresh, remove.Amb, cPos[[1]], cPos[[2]], "plus", retain.reads, mode))
+      if (dim(data_plus)[1] < threshold)
       {
         out[["log"]]=as.data.frame(bin)
       }else{
-        names(data_plus)=unlist(cPos[[1]])
+        colnames(data_plus)=unlist(cPos[[1]])
         out=get_out(data_plus, out, bin@strand@values, bin, get.cPos, myfuns)
       }
     }else {
       ##se lo strand e' * e solo in negativo e' pieno oppure lo strand e' -
       cPos=get_cPos(rseq,mode,"minus",bisu.Thresh)
-      data_minus=get_epiMatrix(align_minus, bisu.Thresh, remove.Amb, cPos[[3]], cPos[[4]], "minus", retain.reads,mode)
-      if (dim(data_minus)[1]==0)
+      data_minus=tidyr::as_tibble(get_epiMatrix(align_minus, bisu.Thresh, remove.Amb, cPos[[3]], cPos[[4]], "minus", retain.reads,mode))
+      if (dim(data_minus)[1] < threshold)
       {
         out[["log"]]=as.data.frame(bin)
       }else{
-        names(data_minus)=unlist(cPos[[3]])
+        colnames(data_minus)=unlist(cPos[[3]])
         out=get_out(data_minus, out, bin@strand@values, bin, get.cPos, myfuns)
       }
     }
@@ -397,6 +389,7 @@ epiallele_analyse=function(align,
 
 epiallele_analyse_Block <- function(df,
                                     aln_c,
+                                    threshold,
                                     bisu.Thresh,
                                     stranded,
                                     mode,
@@ -408,7 +401,7 @@ epiallele_analyse_Block <- function(df,
   for (i in 1:nrow(df)) {
     ret_list[[i]] = epiallele_analyse(align= aln_c,
                                       bin = GenomicRanges::GRanges(df[i,]$seqnames,IRanges::IRanges(df[i,]$start,df[i,]$end)),
-                                      threshold = 50,
+                                      threshold = threshold,
                                       bisu.Thresh = bisu.Thresh,
                                       stranded = stranded,
                                       mode = mode,

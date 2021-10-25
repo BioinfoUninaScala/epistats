@@ -1,17 +1,18 @@
 #' epiStat
 #'
-#' @importFrom purrr map reduce map_dfr map_dbl
-#' @importFrom dplyr select distinct mutate full_join filter group_by summarize
-#' @importFrom future plan
-#' @importFrom furrr future_map2_dfr
-#' @importFrom foreach foreach registerDoSEQ %dopar%
+#' @importFrom purrr map reduce map_dfr map_dbl map2 map_df
+#' @importFrom dplyr select mutate full_join filter group_by summarize group_by ungroup count n_distinct
+#' @importFrom foreach foreach %dopar%
 #' @importFrom stats complete.cases p.adjust
 #' @importFrom vegan vegdist adonis2
 #' @importFrom plyranges as_granges reduce_ranges group_by
 #' @importFrom tidyr separate as_tibble
-#' @importFrom doMC registerDoMC
+#' @importFrom parallel makeCluster stopCluster
+#' @importFrom doParallel registerDoParallel
 #' @param sample_list list of epiMatrix coming from epiAnalysis function
 #' @param metadata dataframe. Your samples metadata
+#' @param colgroups character indicating the colname of Groups vector
+#' @param colsamples character indicating the colname of Samples vector
 #' @param rmUnmeth logical indicating if 0 methylated species should be removed of not from the analysis
 #' @param cores num of cores
 #' @param minGroups integer indicating the minimum number of unique Groups should be used for the dissimilarity analysis among samples
@@ -21,46 +22,50 @@
 #' @export
 
 
-epiStat <- function(sample_list, metadata,
+epiStat <- function(sample_list, metadata, colgroups, colsamples,
                     rmUnmeth = FALSE, cores = 1,
                     minGroups = 2, minSampleSize = 2, reduce = FALSE){
+  ## Filtraggio regioni
+  list = sample_list %>% map(select, id) %>%
+    map(distinct, id) %>%
+    purrr::map2(., names(.), ~ dplyr::mutate(.x, sample = .y)) %>%
+    purrr::map_df(~ .) %>%
+    dplyr::group_by(id) %>%
+    dplyr::left_join(., metadata, by = c("sample" = colsamples)) %>%
+    dplyr::group_by(id, .[colgroups]) %>% dplyr::count() %>%
+    dplyr::filter(n >= minSampleSize) %>% dplyr::ungroup()
+  ####
+  list <- list %>% dplyr::group_by(id) %>% dplyr::mutate(ngroups = dplyr::n_distinct(get(colgroups))) %>% dplyr::filter(ngroups >= minGroups)
 
-  list = purrr::map(sample_list, function(x) x %>%
-                      dplyr::select(id) %>%
-                      dplyr::distinct() %>%
-                      dplyr::mutate(present = TRUE))
-  ## Names
-  filt = list %>%
-    purrr::reduce(dplyr::full_join, by = "id") %>%
-    dplyr::mutate(count_na = rowSums(is.na(.))) %>%
-    dplyr::filter(count_na < (length(sample_list)-2))
-  ## Take regions IDs
-  regions = filt$id
-  ## Split regions
-  regs <- split(regions, (seq(length(regions))-1) %/% (length(regions)/cores))
-  ### Split samples
+  ### Take filtered regions
+  regs = unique(list$id)
+
+  ### Split regions
+  regs <- split(regs, (seq(length(regs))-1) %/% (length(regs)/cores))
+
+  ### Split data
   filt_samples <- foreach::foreach(reg = regs) %do% {
     filt = purrr::map(sample_list, ~ dplyr::filter(., id %in% reg))
   }
-  ## Plan parallel
-  doMC::registerDoMC(cores = cores)
-  ## Run allStat on all the blocks
-  prova = foreach::foreach(a = regs, b = filt_samples) %dopar% {
-      block = allStat(a, b, metadata, rmUnmeth, minGroups, minSampleSize)
-  }
-  ## Release cores
-  foreach::registerDoSEQ()
-  ## Bind all dataframes
-  prova = prova %>% map_df(~.)
-  ## Remove NAs
-  prova = prova[stats::complete.cases(prova)==TRUE,]
+  ### Do parallel
+  cl <- parallel::makeCluster(cores, type = 'PSOCK')
+  doParallel::registerDoParallel(cl)
+  res = foreach::foreach(a = regs, b = filt_samples,
+                         .combine = rbind,
+                         .packages = c("magrittr", "dplyr", "purrr", "vegan"),
+                         .export = c('oneStat', 'getEpimatrix')) %dopar% {
+                          block = allStat(a, b, metadata, colgroups, colsamples, rmUnmeth, minGroups)
+                         }
+  parallel::stopCluster(cl)
+  ## Filter results
+  prova = res[stats::complete.cases(res)==TRUE,]
   ## Adjust p-values
-  prova = prova %>% mutate(p.adjust = p.adjust(p.value, method = "fdr"), .after = p.value)
+  prova = prova %>% dplyr::mutate(p.adjust = p.adjust(p.value, method = "fdr"), .after = p.value)
   ## Separate columns
   prova = prova %>%
     tidyr::separate(id, c("seqnames", "start", "end"), "_",
                     remove = FALSE, convert = TRUE)
-  ## Reduce intervals
+
   if(reduce == TRUE){
     # Take groups names
     groups = colnames(prova[9:ncol(prova)])
@@ -95,28 +100,21 @@ getEpimatrix <- function(samples, region){
   return(data)
 }
 
-oneStat <- function(sample_list, region, metadata, rmUnmeth, minGroups, minSampleSize){
+oneStat <- function(sample_list, region, metadata, colgroups, colsamples, rmUnmeth, minGroups){
   data <- getEpimatrix(sample_list, region)
   if(rmUnmeth == TRUE){
     data <- data[grep("1", colnames(data))]
     data <- data %>% dplyr::filter(!rowSums(.) == 0)
   }
-    groups = unique(metadata$Group)
+    groups = unique(metadata[[colgroups]])
     metadata <- metadata %>%
-      dplyr::filter(Samples %in% rownames(data))
-    check <- metadata %>%
-             dplyr::group_by(Group) %>%
-                  dplyr::summarize(count = length(Group))
-    check <- check[check$count >= minSampleSize,]
-    metadata <- metadata[metadata$Group %in% check$Group,]
-    data <- data %>%
-      dplyr::filter(rownames(.) %in% metadata$Samples)
+      dplyr::filter(metadata[[colsamples]] %in% rownames(data))
     dist = vegan::vegdist(data, method="bray")
-    if(length(unique(metadata$Group)) > minGroups){
-      a = groups %>% purrr::map_dbl(~ length(metadata$Samples[metadata$Group == .x]))
+    if(length(unique(metadata[[colgroups]])) >= minGroups){
+      a = groups %>% purrr::map_dbl(~ length(metadata[[colsamples]][metadata[[colgroups]] == .x]))
       a = t(as.data.frame(a, row.names = groups))
       rownames(a) = NULL
-      p <- suppressMessages(adonis2(dist ~ Group, data = metadata))
+      p <- suppressMessages(vegan::adonis2(as.formula(paste("dist", colgroups, sep = "~")), data = metadata))
       result = data.frame("id" = region,
                          "F.statistics" = p$F[1],
                          "p.value" = p$`Pr(>F)`[1],
@@ -136,8 +134,8 @@ oneStat <- function(sample_list, region, metadata, rmUnmeth, minGroups, minSampl
 }
 
 
-allStat <- function(regions, sample_list, metadata, rmUnmeth, minGroups, minSampleSize){
-  out = regions %>% map_dfr(~ oneStat(sample_list, .x, metadata, rmUnmeth, minGroups, minSampleSize))
+allStat <- function(regions, sample_list, metadata, colgroups, colsamples, rmUnmeth, minGroups){
+  out = regions %>% map_dfr(~ oneStat(sample_list, .x, metadata, colgroups, colsamples, rmUnmeth, minGroups))
   return(out)
 }
 

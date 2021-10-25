@@ -7,6 +7,8 @@
 epiStat(
   sample_list,
   metadata,
+  colgroups,
+  colsamples,
   rmUnmeth = FALSE,
   cores = 1,
   minGroups = 2,
@@ -18,6 +20,10 @@ epiStat(
 \item{sample_list}{list of epiMatrix coming from epiAnalysis function}
 
 \item{metadata}{dataframe. Your samples metadata}
+
+\item{colgroups}{character indicating the colname of Groups vector}
+
+\item{colsamples}{character indicating the colname of Samples vector}
 
 \item{rmUnmeth}{logical indicating if 0 methylated species should be removed of not from the analysis}
 
