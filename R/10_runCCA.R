@@ -1,17 +1,36 @@
-#' runCCA
+#' Visualizing the ordination plot for a selected region
 #'
+#' @description
+#' Function used to display the ordination plot of samples relative to specific genomic regions.
 #' @importFrom purrr map reduce
 #' @importFrom dplyr filter select full_join
 #' @importFrom vegan cca ordiellipse
-#' @param samples list of epimatrices
-#' @param region one region of interest
-#' @param metadata samples metadata
-#' @return list
+#' @param samples A list object containing the epiallele composition matrices from all the samples of the dataset.
+#' @param region A string containing the regionID wanted to perform the analysis.
+#' @param metadata A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.
+#' @param printData Logical indicating whether the epiallele matrix should be printed in the standard output or not.
+#' @param rmUnmeth Logical indicating whether unmethylated epialleles should be discarded from the analysis.
+#' @return A list object storing the ordination results and an ordination plot.
 #' @export
+#' @examples
+#' samples_list <- list(Sample1_epiAnalysis.txt,
+#'                      Sample2_epiAnalysis.txt,
+#'                      Sample3_epiAnalysis.txt,
+#'                      Sample4_epiAnalysis.txt)
+#'
+#' p <- runCCA(samples = samples_list,
+#'             region = "chr1_34567876_34567923",
+#'             metadata = ann,
+#'             printData = FALSE,
+#'             rmUnmeth = FALSE)
+#' p
 
-
-runCCA <- function(samples, region, metadata, printData = FALSE){
+runCCA <- function(samples, region, metadata, printData = FALSE, rmUnmeth = FALSE){
   data <- getEpimatrix(samples, region)
+  if(rmUnmeth == TRUE){
+    data <- data[grep("1", colnames(data))]
+    data = data %>% dplyr::filter(!rowSums(.) == 0)
+  }
   if(length(colnames(data)) <= 1){
     print("Plotting is not possible with just one epiallele specie")
   } else {

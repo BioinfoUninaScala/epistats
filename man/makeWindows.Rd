@@ -2,30 +2,62 @@
 % Please edit documentation in R/5_makeWindows.R
 \name{makeWindows}
 \alias{makeWindows}
-\title{makeWindows}
+\title{Designing sliding windows with a fixed length size}
 \usage{
-makeWindows(gr, window, step, Genome, mode, min.C, max.C, cores)
+makeWindows(
+  gr,
+  Genome,
+  window = 50,
+  step = 1,
+  mode = "CG",
+  min.C = 1,
+  max.C = 50,
+  cores = 1
+)
 }
 \arguments{
-\item{gr}{GRanges}
+\item{gr}{A GRanges object containing the filtered regions obtained to design target regions.}
 
-\item{window}{length size of the sliding window}
+\item{Genome}{A DNAStringSet object containing the fasta Genome (obtained from the loadInput() function).}
 
-\item{step}{step size to slide}
+\item{window}{An integer indicating the length size of the sliding windows}
 
-\item{Genome}{fasta Genome}
+\item{step}{An integer indicating the step size used to slide windows}
 
-\item{mode}{pattern character}
+\item{mode}{A character indicating the pattern to be used to analyse DNA methylation (one of "CG", "CC", "CA", "CT").}
 
-\item{min.C}{min num of CpG in the sliding window}
+\item{min.C}{Numeric indicating the minimum number of CpGs to be displayed in the sliding window (Default = 2).}
 
-\item{max.C}{max num of CpG in the sliding window}
+\item{max.C}{Numeric indicating the maximum number of CpGs to be displayed in the sliding window (Default = 50)}
 
-\item{cores}{num of cores to use}
+\item{cores}{Numeric indicating the number of cores to be used for the computation}
 }
 \value{
-GRanges
+A GRanges object containing the newly designed sliding windows with user-defined features.
 }
 \description{
-makeWindows
+One of the two available methods to build target regions. This functions works by designing sliding windows with user-defined values of length and step size. Target regions will contain different numbers of CpG sites.
+}
+\examples{
+data <- loadInput(bamfile, genomefile)
+algn <- data[[1]]
+
+## Keeping only standard chromosomes
+filtered <- filterBAM(algn,
+                      keepStChr =TRUE,
+                      keepM = FALSE,
+                      retainChr = NULL)
+
+## Selecting regions with a minimum coverage
+covered <- filterByCoverage(algn, threshold = 50, minsize = 8)
+
+## Designing customised sliding windows
+windows <- makeWindows(gr = covered,
+                       Genome = Genome,
+                       window = 50,
+                       step = 1,
+                       mode = "CG",
+                       min.C = 2,
+                       max.C = 50,
+                       cores = 40)
 }

@@ -2,18 +2,27 @@
 % Please edit documentation in R/19_getEpimatrix.R
 \name{getEpimatrix}
 \alias{getEpimatrix}
-\title{getEpimatrix}
+\title{Getting the epialleles matrix for one genomic region}
 \usage{
 getEpimatrix(samples, region)
 }
 \arguments{
-\item{samples}{list of samples epiMatrices coming from epiAnalysis function}
+\item{samples}{A list object containing the epiallele composition matrices from all the samples of the dataset.}
 
-\item{region}{genomic coordinate of your region of interest}
+\item{region}{A character indicating the regionID wanted to perform the analysis.}
 }
 \value{
-Epiallele community data matrix
+Epiallele community data matrix.
 }
 \description{
-getEpimatrix
+The function gives as output the epiallele composition matrix relative to one genomic interval.
+}
+\examples{
+samples_list <- list(Sample1_epiAnalysis.txt,
+                     Sample2_epiAnalysis.txt,
+                     Sample3_epiAnalysis.txt,
+                     Sample4_epiAnalysis.txt)
+
+epimatrix <- getEpimatrix(samples = samples_list,
+                         region = "chr1_34567876_34567923")
 }

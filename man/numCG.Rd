@@ -2,16 +2,16 @@
 % Please edit documentation in R/15_numCG.R
 \name{numCG}
 \alias{numCG}
-\title{numCG}
+\title{Counting the number of CpG sites contained in one interval}
 \usage{
 numCG(matrix)
 }
 \arguments{
-\item{matrix}{epialleles matrix}
+\item{matrix}{Epialleles binary matrix.}
 }
 \value{
-integer indicating how many CpGs are in a given region
+An integer indicating the number of CpGs displayed for one genomic interval.
 }
 \description{
-numCG
+Counting the number of CpG sites contained in one interval
 }

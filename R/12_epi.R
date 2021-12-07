@@ -1,7 +1,7 @@
-#' epi
+#' Calculating the number of different epialleles observed for one genomic region
 #'
-#' @param matrix epialleles matrix
-#' @return character indicating the max frequent epiallelic specie
+#' @param matrix Epiallele binary matrix.
+#' @return A numeric indicating the number of observed epialleles in one interval.
 #' @export
 
 epi <- function(matrix){

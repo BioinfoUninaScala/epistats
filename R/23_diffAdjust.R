@@ -1,21 +1,37 @@
-#' diffAdjust
-#'
+#' Getting regions which differ for one statistic (such as Shannon Entropy, etc...) through linear model and possibly adjusting for a covariate
+#' @description
+#' This function is implemented to get different significant regions using a linear model adjusted for a covariate (different Points in time, different tissue, etc...).
 #' @importFrom purrr map map2 map_df
 #' @importFrom dplyr filter mutate select full_join group_by left_join ungroup nest_by summarise count as_tibble
 #' @importFrom tidyr pivot_longer separate unnest
 #' @importFrom broom tidy
 #' @importFrom plyranges as_granges group_by reduce_ranges
-#' @param intervals_list list of samples intervals. It corresponds to the output 'epi' from the epiAnalysis function
-#' @param metadata your samples metadata. The input file must contain the columns named "Group" and "Samples"
-#' @param statistic
-#' @param groupcol
-#' @param covariate
-#' @param cores
-#' @param reduce
-#' @return Dataframe with statistics
+#' @param intervals_list A list object. It corresponds to a list containing the summary outputs obtained through epiAnalysis() function (the ones containing the summary statistics, such as Shannon Entropy, Mean CpGs distance, etc...).
+#' @param metadata Samples metadata provided as table. This input data should contain specific columns for samples names and groups distinction.
+#' @param statistic Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").
+#' @param groupcol Character indicating the column name of the Groups in the metadata used to compare the statistics.
+#' @param covariate Character indicating the column name of the covariate to be used to adjust the linear model.
+#' @param cores An integer indicating the number of cores to be used to perform the computation.
+#' @param reduce Logical indicating whether adjacent overlapping intervals should be reduced as a unique interval or not.
+#' @return A dataframe containing the statistical test results.
 #' @export
+#' @examples
+#' data(epistats)
+#' samples_list <- list(Sample1_intervals.bed,
+#'                      Sample2_intervals.bed,
+#'                      Sample3_intervals.bed,
+#'                      Sample4_intervals.bed)
+#'
+#' diffModel <- diffAdjust(intervals_list = samples_list,
+#'                         metadata = ann,
+#'                         samples = "Samples",
+#'                         statistic = "Shannon",
+#'                         groupcol = "Group",
+#'                         covariate = "Time",
+#'                         cores = 40,
+#'                         reduce = FALSE)
 
-diffAdjust <- function(data,
+diffAdjust <- function(intervals_list,
                        metadata,
                        samples,
                        statistic,
@@ -29,11 +45,11 @@ diffAdjust <- function(data,
   # 4. Select from each dataframe only the shanNorm and the id columns
   # 5. Join by the id all the shanNorm columns from all the samples dataframes
   # 6. Take the rows that have no NAs (you have the ShanNorm value in all samples of your list)
-  check <- data %>% purrr::map(mutate, id = paste(seqnames, start, end, sep = "_")) %>%
-    purrr::map(dplyr::filter, !duplicated(id)) %>%
-    purrr::map(dplyr::select, id, all_of(statistic)) %>%
-    purrr::map2(., names(.), ~ dplyr::mutate(.x, sample = .y)) %>%
-    purrr::map_df(~ .)
+  check <- intervals_list %>% purrr::map(mutate, id = paste(seqnames, start, end, sep = "_")) %>%
+                              purrr::map(dplyr::filter, !duplicated(id)) %>%
+                              purrr::map(dplyr::select, id, all_of(statistic)) %>%
+                              purrr::map2(., names(.), ~ dplyr::mutate(.x, sample = .y)) %>%
+                              purrr::map_df(~ .)
   ## Find all regions
   regs <- unique(check$id)
   ## Split regs

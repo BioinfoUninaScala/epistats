@@ -2,16 +2,16 @@
 % Please edit documentation in R/17_maxfreq.R
 \name{maxfreq}
 \alias{maxfreq}
-\title{maxfreq}
+\title{Reporting the epiallele observed at the highest frequency in one genomic interval}
 \usage{
 maxfreq(matrix)
 }
 \arguments{
-\item{matrix}{epialleles matrix}
+\item{matrix}{Epialleles binary matrix.}
 }
 \value{
-character
+A string reporting the epiallele observed at the highest frequency in the genomic interval.
 }
 \description{
-maxfreq
+Reporting the epiallele observed at the highest frequency in one genomic interval
 }

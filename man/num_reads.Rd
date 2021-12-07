@@ -2,16 +2,16 @@
 % Please edit documentation in R/16_numReads.R
 \name{num_reads}
 \alias{num_reads}
-\title{numReads}
+\title{Counting the number of reads mapping on one genomic interval.}
 \usage{
 num_reads(matrix)
 }
 \arguments{
-\item{matrix}{epialleles matrix}
+\item{matrix}{Epialleles binary matrix.}
 }
 \value{
-integer indicating the depth of a given region
+An integer indicating the coverage observed in the genomic region.
 }
 \description{
-numReads
+Counting the number of reads mapping on one genomic interval.
 }

@@ -2,20 +2,37 @@
 % Please edit documentation in R/10_runCCA.R
 \name{runCCA}
 \alias{runCCA}
-\title{runCCA}
+\title{Visualizing the ordination plot for a selected region}
 \usage{
-runCCA(samples, region, metadata, printData = FALSE)
+runCCA(samples, region, metadata, printData = FALSE, rmUnmeth = FALSE)
 }
 \arguments{
-\item{samples}{list of epimatrices}
+\item{samples}{A list object containing the epiallele composition matrices from all the samples of the dataset.}
 
-\item{region}{one region of interest}
+\item{region}{A string containing the regionID wanted to perform the analysis.}
 
-\item{metadata}{samples metadata}
+\item{metadata}{A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.}
+
+\item{printData}{Logical indicating whether the epiallele matrix should be printed in the standard output or not.}
+
+\item{rmUnmeth}{Logical indicating whether unmethylated epialleles should be discarded from the analysis.}
 }
 \value{
-list
+A list object storing the ordination results and an ordination plot.
 }
 \description{
-runCCA
+Function used to display the ordination plot of samples relative to specific genomic regions.
+}
+\examples{
+samples_list <- list(Sample1_epiAnalysis.txt,
+                     Sample2_epiAnalysis.txt,
+                     Sample3_epiAnalysis.txt,
+                     Sample4_epiAnalysis.txt)
+
+p <- runCCA(samples = samples_list,
+            region = "chr1_34567876_34567923",
+            metadata = ann,
+            printData = FALSE,
+            rmUnmeth = FALSE)
+p
 }

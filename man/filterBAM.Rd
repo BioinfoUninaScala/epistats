@@ -2,22 +2,22 @@
 % Please edit documentation in R/2_filterBAM.R
 \name{filterBAM}
 \alias{filterBAM}
-\title{filterBAM}
+\title{Filtering function}
 \usage{
 filterBAM(algn, keepStChr = TRUE, keepM = FALSE, retainChr = NULL)
 }
 \arguments{
-\item{algn}{GAlignments object}
+\item{algn}{GAlignments object containing aligned reads}
 
-\item{keepStChr}{logical}
+\item{keepStChr}{Logical indicating whether only standard chromosomes should be kept}
 
-\item{keepM}{logical}
+\item{keepM}{Logical indicating whether the mitochondrial chromosome should be kept for the analysis or not}
 
-\item{retainChr}{logical}
+\item{retainChr}{Vector containing the chromosomes to be analysed as characters. Note that the strings should correspond to the seqlevels contained in the GAlignment object.}
 }
 \value{
-filtered GAlignments object
+A filtered GAlignments object.
 }
 \description{
-filterBAM
+This function is provided to filter only selected regions from bamfiles (specific chromosomes of interest, etc...).
 }

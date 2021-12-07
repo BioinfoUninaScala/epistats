@@ -2,7 +2,7 @@
 % Please edit documentation in R/20_oneTest.R
 \name{oneTest}
 \alias{oneTest}
-\title{oneTest}
+\title{Performing PERMANOVA on one genomic interval}
 \usage{
 oneTest(
   sample_list,
@@ -15,15 +15,38 @@ oneTest(
 )
 }
 \arguments{
-\item{sample_list}{list of samples epiMatrices coming from epiAnalysis function}
+\item{sample_list}{A list object containing the epiallele composition matrices from all the samples of the dataset.}
 
-\item{region}{genomic coordinate of your region of interest}
+\item{region}{A string containing the regionID wanted to perform the analysis.}
 
-\item{metadata}{dataframe. Your samples metadata}
+\item{metadata}{A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.}
+
+\item{rmUnmeth}{Logical indicating if 0 methylated epialleles should be removed or not from the analysis.}
+
+\item{minGroups}{An integer indicating the minimum number of unique Groups that should be used for the dissimilarity analysis.}
+
+\item{minSampleSize}{An integer indicating the minimum number of samples per group required to perform the statistical analysis.}
+
+\item{printData}{Logical indicating whether the epiallele matrix should be printed in the standard output or not (Default = FALSE).}
 }
 \value{
-Dataframe with statistics
+
 }
 \description{
-oneTest
+Performing PERMANOVA considering one specific region of interest.
+}
+\examples{
+samples_list <- list(Sample1_epiAnalysis.txt,
+                     Sample2_epiAnalysis.txt,
+                     Sample3_epiAnalysis.txt,
+                     Sample4_epiAnalysis.txt)
+
+onestat <- oneTest(sample_list = samples_list,
+                   region = "chr1_34567876_34567923",
+                   metadata = ann,
+                   rmUnmeth = FALSE,
+                   minGroups = 2,
+                   minSampleSize = 2,
+                   printData = FALSE)
+
 }

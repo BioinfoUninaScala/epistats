@@ -7,13 +7,19 @@
 loadInput(bamfile, genomefile)
 }
 \arguments{
-\item{bamfile}{path to bamfile}
+\item{bamfile}{path to bamfile to be analysed. Note that folder containing the bamfile should also contain the bam index.}
 
-\item{genomefile}{path to genome/fasta}
+\item{genomefile}{path to genome (FASTA format).}
 }
 \value{
-data
+A list containg a GAlignment object and a DNAStringSet object.
 }
 \description{
-loadInput
+Loading inputa data.
+}
+\examples{
+bamfile = ("./bamfilelocation")
+genomefile = ("./genome.fa")
+data <- loadInput(bamfile, genomefile)
+
 }

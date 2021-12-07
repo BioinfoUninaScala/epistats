@@ -1,7 +1,7 @@
-#' shannon
+#' Calcuting the Shannon Entropy in one genomic region.
 #'
-#' @param matrix epialleles matrix
-#' @return numeric indicating shannon entropy value
+#' @param matrix Epialleles binary matrix.
+#' @return A numeric indicating Shannon Entropy value relative to one genomic interval.
 #' @export
 
 shannon <- function(matrix){

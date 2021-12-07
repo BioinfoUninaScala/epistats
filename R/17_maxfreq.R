@@ -1,7 +1,7 @@
-#' maxfreq
+#' Reporting the epiallele observed at the highest frequency in one genomic interval
 #'
-#' @param matrix epialleles matrix
-#' @return character
+#' @param matrix Epialleles binary matrix.
+#' @return A string reporting the epiallele observed at the highest frequency in the genomic interval.
 #' @export
 
 maxfreq <- function(matrix){

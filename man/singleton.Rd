@@ -2,16 +2,16 @@
 % Please edit documentation in R/13_singleton.R
 \name{singleton}
 \alias{singleton}
-\title{singleton}
+\title{Calculating the number of epialleles with just one observation}
 \usage{
 singleton(matrix)
 }
 \arguments{
-\item{matrix}{epialleles matrix}
+\item{matrix}{Epiallele binary matrix}
 }
 \value{
-integer indicating how many species are represented alone
+An integer indicating the number of epiallele with a unique observation in a given interval
 }
 \description{
-singleton
+Calculating the number of epialleles with just one observation
 }

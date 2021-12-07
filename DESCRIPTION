@@ -15,4 +15,4 @@ Imports: Biostrings, GenomicAlignments, GenomeInfoDb, GenomicRanges, IRanges,
          parallel, S4Vectors, BSgenome, foreach, purrr, XVector,
          dplyr, stats, vegan, pairwiseAdonis, magrittr, Rsamtools, tidyr, 
          broom, seq2pathway, plyranges, doParallel
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2

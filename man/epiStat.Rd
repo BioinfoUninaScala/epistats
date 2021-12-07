@@ -2,7 +2,7 @@
 % Please edit documentation in R/7_epiStat.R
 \name{epiStat}
 \alias{epiStat}
-\title{epiStat}
+\title{Getting regions which differ for their epiallele composition among distinct conditions.}
 \usage{
 epiStat(
   sample_list,
@@ -17,27 +17,47 @@ epiStat(
 )
 }
 \arguments{
-\item{sample_list}{list of epiMatrix coming from epiAnalysis function}
+\item{sample_list}{A list object containing the epiallele composition matrices from all the samples of the dataset.}
 
-\item{metadata}{dataframe. Your samples metadata}
+\item{metadata}{A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.}
 
-\item{colgroups}{character indicating the colname of Groups vector}
+\item{colgroups}{A character indicating the column name containing the Group the samples belong to.}
 
-\item{colsamples}{character indicating the colname of Samples vector}
+\item{colsamples}{A character indicating the column name containing samples IDs.}
 
-\item{rmUnmeth}{logical indicating if 0 methylated species should be removed of not from the analysis}
+\item{rmUnmeth}{Logical indicating if 0-methylated epialleles should be removed of not from the analysis.}
 
-\item{cores}{num of cores}
+\item{cores}{Numeric indicating the number of cores to be used to perform the computation.}
 
-\item{minGroups}{integer indicating the minimum number of unique Groups should be used for the dissimilarity analysis among samples}
+\item{minGroups}{Numeric indicating the minimum number of Groups required to perform the dissimilarity matrices analysis.}
 
-\item{minSampleSize}{integer indicating the minimum number of samples per group needed to perform the statistical analysis}
+\item{minSampleSize}{Numeric indicating the minimum number of samples per group wanted to perform the statistical analysis.}
 
-\item{reduce}{logical indicating if intervals with the same statistics should be reduced or not}
+\item{reduce}{Logical indicating if intervals with the same statistics should be reduced as unique interval or not.}
 }
 \value{
-dataframe with rows indicating the genomic regions analysed and columns containing the statistics
+A dataframe object having analysed genomic regions as rows and test results as columns.
+p.value = p.value indicating the significance of the test statistics for each region.
+numEpi = number of different epialleles observed.
+Group columns containing the number of samples used for each analysis are also displayed for each region.
 }
 \description{
-epiStat
+This function takes as input the compressed binary matrices containing the epiallele composition from all samples. It works by performing a PERMANOVA analysis, calculating the distances between samples within and among the distinct groups.
+}
+\examples{
+samples_list <- list(Sample1_epiAnalysis.txt,
+                     Sample2_epiAnalysis.txt,
+                     Sample3_epiAnalysis.txt,
+                     Sample4_epiAnalysis.txt)
+
+
+epistat <- epiStat(sample_list = samples_list,
+                   metadata = ann,
+                   colgroups = "Group",
+                   colsamples = "Samples",
+                   rmUnmeth = FALSE,
+                   cores = 40,
+                   minGroups = 2,
+                   minSampleSize = 2,
+                   reduce = FALSE)
 }

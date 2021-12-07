@@ -2,18 +2,33 @@
 % Please edit documentation in R/21_runRDA.R
 \name{runRDA}
 \alias{runRDA}
-\title{runRDA}
+\title{Running principal component analysis for one genomic interval}
 \usage{
-runRDA(samples, region, printData = FALSE)
+runRDA(samples, region, printData = FALSE, rmUnmeth = FALSE)
 }
 \arguments{
-\item{samples}{list of epimatrices}
+\item{samples}{A list object containing the epiallele composition matrices from all the samples of the dataset.}
 
-\item{region}{one region of interest}
+\item{region}{A character indicating the regionID wanted to perform the analysis.}
+
+\item{printData}{Logical indicating whether the epiallele matrix should be printed in the standard output or not (Default = FALSE).}
+
+\item{rmUnmeth}{Logical indicating if 0 methylated epialleles should be removed or not from the analysis.}
 }
 \value{
-PCA plot
+Principal Component analysis results and plot.
 }
 \description{
-runRDA
+Running principal component analysis for one genomic interval
+}
+\examples{
+samples_list <- list(Sample1_epiAnalysis.txt,
+                     Sample2_epiAnalysis.txt,
+                     Sample3_epiAnalysis.txt,
+                     Sample4_epiAnalysis.txt)
+
+runRDA(samples = samples_list,
+       region = "chr1_34567876_34567923",
+       printData = FALSE,
+       rmUnmeth = FALSE)
 }

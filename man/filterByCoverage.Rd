@@ -2,20 +2,25 @@
 % Please edit documentation in R/3_filterByCoverage.R
 \name{filterByCoverage}
 \alias{filterByCoverage}
-\title{filterByCoverage}
+\title{Selecting regions with a minimum user-defined coverage}
 \usage{
-filterByCoverage(algn, threshold, minsize)
+filterByCoverage(algn, threshold = 50, minsize = 50)
 }
 \arguments{
-\item{algn}{GAlignments object}
+\item{algn}{GAlignments object to filter.}
 
-\item{threshold}{integer}
+\item{threshold}{Integer indicating the minimum coverage required to keep genomic regions}
 
-\item{minsize}{integer}
+\item{minsize}{Integer indicating the minimum size of the genomic range. This value is also depending from the method of choice that will be used by the dedicated functions makeBins() and makeWindows(). If you use makeBins() the minimum size will be equal to the length of n(CpG sites to be included in the target region)x2. Instead, if you use makeWindows, the minimum size of the genomic regions used to build target regions will be equal to the size of the sliding window that will be used next.}
 }
 \value{
-filtered GRanges object
+filtered GRanges object.
 }
 \description{
-filterByCoverage
+The functions allows the selection of genomic regions that satisfy a minimum coverage threshold defined by the user as a parameter.
+}
+\examples{
+## Selecting regions that are covered by at least 50 reads
+## Building target regions containing 4 CpG sites covered by at least 50 reads
+covered <- filterByCoverage(algn, threshold = 50, minsize = 8)
 }

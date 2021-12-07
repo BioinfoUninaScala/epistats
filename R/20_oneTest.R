@@ -1,12 +1,32 @@
-#' oneTest
+#' Performing PERMANOVA on one genomic interval
 #'
+#' @description
+#' Performing PERMANOVA considering one specific region of interest.
 #' @importFrom purrr map reduce map_dbl
 #' @importFrom dplyr select full_join filter group_by summarize
-#' @param sample_list list of samples epiMatrices coming from epiAnalysis function
-#' @param region genomic coordinate of your region of interest
-#' @param metadata dataframe. Your samples metadata
-#' @return Dataframe with statistics
+#' @param sample_list A list object containing the epiallele composition matrices from all the samples of the dataset.
+#' @param region A string containing the regionID wanted to perform the analysis.
+#' @param metadata A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.
+#' @param rmUnmeth Logical indicating if 0 methylated epialleles should be removed or not from the analysis.
+#' @param minGroups An integer indicating the minimum number of unique Groups that should be used for the dissimilarity analysis.
+#' @param minSampleSize An integer indicating the minimum number of samples per group required to perform the statistical analysis.
+#' @param printData Logical indicating whether the epiallele matrix should be printed in the standard output or not (Default = FALSE).
+#' @return
 #' @export
+#' @examples
+#' samples_list <- list(Sample1_epiAnalysis.txt,
+#'                      Sample2_epiAnalysis.txt,
+#'                      Sample3_epiAnalysis.txt,
+#'                      Sample4_epiAnalysis.txt)
+#'
+#' onestat <- oneTest(sample_list = samples_list,
+#'                    region = "chr1_34567876_34567923",
+#'                    metadata = ann,
+#'                    rmUnmeth = FALSE,
+#'                    minGroups = 2,
+#'                    minSampleSize = 2,
+#'                    printData = FALSE)
+#'
 
 oneTest <- function(sample_list, region, metadata, rmUnmeth = FALSE, minGroups = 2, minSampleSize = 2, printData = FALSE){
   data <- getEpimatrix(sample_list, region)

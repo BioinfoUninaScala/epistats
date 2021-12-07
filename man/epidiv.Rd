@@ -2,20 +2,33 @@
 % Please edit documentation in R/9_epidiv.R
 \name{epidiv}
 \alias{epidiv}
-\title{epidiv}
+\title{Finding the epiallele species which are contributing most to the dissimilarity among groups}
 \usage{
 epidiv(samples, region, metadata)
 }
 \arguments{
-\item{samples}{list of epimatrices}
+\item{samples}{A list object containing the epiallele composition matrices from all the samples of the dataset.}
 
-\item{region}{one region of interest}
+\item{region}{A string containing the regionID wanted to perform the analysis.}
 
-\item{metadata}{samples metadata}
+\item{metadata}{A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.}
 }
 \value{
-list
+A list containing the dissimilarity results.
 }
 \description{
-epidiv
+The function returns the information regarding which epialleles are the ones contributing for the dissimilarity of samples among groups.
+}
+\examples{
+samples_list <- list(Sample1_epiAnalysis.txt,
+                     Sample2_epiAnalysis.txt,
+                     Sample3_epiAnalysis.txt,
+                     Sample4_epiAnalysis.txt)
+
+epidiv <- epidiv(samples = samples_list,
+                 region = "chr1_34567876_34567923",
+                 metadata = ann)
+
+
+
 }

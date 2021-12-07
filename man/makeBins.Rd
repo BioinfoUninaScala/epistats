@@ -2,7 +2,7 @@
 % Please edit documentation in R/4_makeBins.R
 \name{makeBins}
 \alias{makeBins}
-\title{makeBins}
+\title{Designing target regions containing a fixed number of CpG sites}
 \usage{
 makeBins(
   gr,
@@ -15,23 +15,45 @@ makeBins(
 )
 }
 \arguments{
-\item{gr}{GRanges}
+\item{gr}{A GRanges object obtained from the previous filtering functions.}
 
-\item{Genome}{fasta file}
+\item{Genome}{A DNAStringSet containing the fasta genome.}
 
-\item{mode}{character pattern}
+\item{mode}{A character indicanting the pattern to be used to perform the epiallele analysis ("CG", "CA", "CT", "CC")}
 
-\item{n}{num CpG in the bin}
+\item{n}{An integer indicating the number of CpGs sites to be contained in the target region.}
 
-\item{min.binsize}{min length of a bin}
+\item{min.binsize}{An integer indicating the minimum length size of each bin}
 
-\item{max.binsize}{max length of a bin}
+\item{max.binsize}{An integer indicating the maximum length size of each bin}
 
-\item{cores}{number of cores to use}
+\item{cores}{An integer indicating the number of cores to be used for the process}
 }
 \value{
-GRanges
+A GRanges object containing the newly designed target regions with the features specified through the function parameters.
 }
 \description{
-makeBins
+This functions represents one of the two methods available in the epistats package to design customised regions. makeBins() is provided to design target regions which contain a given number of CpG sites (or any of the other C* patterns).
+}
+\examples{
+#' data <- loadInput(bamfile, genomefile)
+algn <- data[[1]]
+
+## Keeping only standard chromosomes
+filtered <- filterBAM(algn,
+                      keepStChr =TRUE,
+                      keepM = FALSE,
+                      retainChr = NULL)
+
+## Selecting regions with a minimum coverage
+covered <- filterByCoverage(algn, threshold = 50, minsize = 8)
+
+## Designing regions containing 4 CpG sites
+  regions = makeBins(gr = covered,
+                     Genome = Genome,
+                     mode = "CG",
+                     n = 4,
+                     min.binsize = 8,
+                     max.binsize = 100,
+                     cores = 40)
 }

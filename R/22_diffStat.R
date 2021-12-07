@@ -1,16 +1,39 @@
-#' diffStat
+#' Calculate regions that differ for a statistic
+#'
+#' Getting the regions that differ for one statistic (e.g. Shannon Entropy, Average DNA Methylation, ...) among distinct conditions.
 #'
 #' @importFrom purrr map reduce
 #' @importFrom dplyr filter mutate select full_join group_by left_join ungroup nest_by n_distinct
 #' @importFrom tidyr pivot_longer separate unnest
-#' @param intervals_list list of samples intervals. It corresponds to the output 'epi' from the epiAnalysis function
-#' @param metadata your samples metadata. The input file must contain the columns named "Group" and "Samples"
-#' @param statistic parameter indicating the colname of the statistic the user wants to use to perform the test
-#' @param groupcol character indicating the Group colname in the metadata used to compare the statistics
-#' @param cores number of cores to use
-#' @param reduce logical indicating whether adiacent overlapping intervals should be reduced or not
-#' @return Table containing the p-values obtained comparing the given statistic between samples of different groups
+#' @param intervals_list A list object. It corresponds to a list containing the summary outputs obtained through epiAnalysis() function (the ones containing the summary statistics, such as Shannon Entropy, Mean CpGs distance, etc...).
+#' @param metadata Samples metadata provided as table. This input data should contain specific columns for samples names and groups distinction.
+#' @param statistic Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").
+#' @param groupcol Character indicating the column name of the Groups in the metadata used to compare the statistics
+#' @param cores Integer indicating the number of cores used to perform the computation
+#' @param reduce Logical indicating whether adjacent overlapping intervals should be reduced as a unique interval or not
+#' @return A dataframe containing the statistical test results.
+#'
+#' id = Regions coordinates given as ID.
+#'
+#' p.value = significance of the difference found for each analysed region
+#'
+#' test = test used to perform the analysis (depending on the number of distinct groups used for the test)
+#'
 #' @export
+#' @examples
+#' data(epistats)
+#' samples_list <- list(Sample1_intervals.bed,
+#'                      Sample2_intervals.bed,
+#'                      Sample3_intervals.bed,
+#'                      Sample4_intervals.bed)
+#'
+#' diff <- diffStat(intervals_list = samples_list,
+#'                  metadata = ann,
+#'                  colsamples = "Samples",
+#'                  statistic = "Shannon",
+#'                  groupcol = "Group",
+#'                  cores = 40,
+#'                  reduce = FALSE)
 
 diffStat <- function(intervals_list,
                      metadata,
@@ -21,7 +44,8 @@ diffStat <- function(intervals_list,
                      reduce=FALSE){
   ## Create id for each dataframe and select only id and the statistic to compare
   lstdata <- intervals_list %>% purrr::map(dplyr::mutate, id = paste(seqnames, start, end, sep = "_")) %>%
-                             purrr::map(dplyr::select, id, all_of(statistic))
+                                purrr::map(dplyr::filter, !duplicated(id)) %>%
+                                purrr::map(dplyr::select, id, all_of(statistic))
   lstdata <- Map(function(x,y) mutate(x, sample = y), lstdata, names(lstdata))
   ## Take all the observed regions (also not in common)
   regs <- 1:length(lstdata) %>% map(function(x) lstdata[[x]]$id)
@@ -36,7 +60,7 @@ diffStat <- function(intervals_list,
   ## Parallel function
   cl <- parallel::makeCluster(cores, type = 'PSOCK')
   doParallel::registerDoParallel(cl)
-  res = foreach::foreach(a = datablocks, .combine = rbind, .packages = c("magrittr", "dplyr")) %dopar% {
+  res = foreach::foreach(a = datablocks, .combine = rbind, .packages = c("magrittr", "dplyr"), .export = 'onefun') %dopar% {
     out = onefun(datalst = a,
                  metadata = metadata,
                  colsamples = colsamples,
@@ -58,10 +82,10 @@ onefun <- function(datalst, metadata, colsamples, statistic, groupcol, reduce){
   filter <- datalst %>% dplyr::left_join(., metadata, by = c("sample" = colsamples)) %>%
     dplyr::group_by(id, .[groupcol]) %>%
     dplyr::mutate(samples = dplyr::n_distinct(sample)) %>%
-    dplyr::filter(samples >= 2) %>%
+    dplyr::filter(samples >= 3) %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(groups = dplyr::n_distinct(all_of(across(groupcol)))) %>%
-    dplyr::filter(groups >= 2 & samples >= 2) %>%
+    dplyr::filter(groups >= 2 & samples >= 3) %>%
     dplyr::ungroup() %>%
     dplyr::select(1:4)
   ## Find Diff

@@ -1,7 +1,7 @@
-#' meanMeth
+#' Calculating the average DNA methylation for one interval
 #'
-#' @param matrix epialleles matrix
-#' @return numeric indicating the mean meth of the entire region
+#' @param matrix Epialleles binary matrix.
+#' @return A numeric indicating the average DNA methylation of one genomic region
 #' @export
 
 meanMeth <- function(matrix){

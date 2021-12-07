@@ -1,7 +1,7 @@
-#' cdist
+#' Calcutating the mean distance among the CpG sites contained in the analysed region
 #'
-#' @param matrix epialleles matrix
-#' @return integer indicating mean dist between CpG in the interval
+#' @param matrix Epiallele binary matrix for one genomic region
+#' @return Integer indicating the mean distance between CpG in the interval
 #' @export
 
 cdist <- function(matrix){

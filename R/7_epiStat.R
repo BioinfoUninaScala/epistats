@@ -1,5 +1,6 @@
-#' epiStat
-#'
+#' Getting regions which differ for their epiallele composition among distinct conditions.
+#' @description
+#' This function takes as input the compressed binary matrices containing the epiallele composition from all samples. It works by performing a PERMANOVA analysis, calculating the distances between samples within and among the distinct groups.
 #' @importFrom purrr map reduce map_dfr map_dbl map2 map_df
 #' @importFrom dplyr select mutate full_join filter group_by summarize group_by ungroup count n_distinct
 #' @importFrom foreach foreach %dopar%
@@ -9,17 +10,36 @@
 #' @importFrom tidyr separate as_tibble
 #' @importFrom parallel makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
-#' @param sample_list list of epiMatrix coming from epiAnalysis function
-#' @param metadata dataframe. Your samples metadata
-#' @param colgroups character indicating the colname of Groups vector
-#' @param colsamples character indicating the colname of Samples vector
-#' @param rmUnmeth logical indicating if 0 methylated species should be removed of not from the analysis
-#' @param cores num of cores
-#' @param minGroups integer indicating the minimum number of unique Groups should be used for the dissimilarity analysis among samples
-#' @param minSampleSize integer indicating the minimum number of samples per group needed to perform the statistical analysis
-#' @param reduce logical indicating if intervals with the same statistics should be reduced or not
-#' @return dataframe with rows indicating the genomic regions analysed and columns containing the statistics
+#' @param sample_list A list object containing the epiallele composition matrices from all the samples of the dataset.
+#' @param metadata A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.
+#' @param colgroups A character indicating the column name containing the Group the samples belong to.
+#' @param colsamples A character indicating the column name containing samples IDs.
+#' @param rmUnmeth Logical indicating if 0-methylated epialleles should be removed of not from the analysis.
+#' @param cores Numeric indicating the number of cores to be used to perform the computation.
+#' @param minGroups Numeric indicating the minimum number of Groups required to perform the dissimilarity matrices analysis.
+#' @param minSampleSize Numeric indicating the minimum number of samples per group wanted to perform the statistical analysis.
+#' @param reduce Logical indicating if intervals with the same statistics should be reduced as unique interval or not.
+#' @return A dataframe object having analysed genomic regions as rows and test results as columns.
+#' p.value = p.value indicating the significance of the test statistics for each region.
+#' numEpi = number of different epialleles observed.
+#' Group columns containing the number of samples used for each analysis are also displayed for each region.
 #' @export
+#' @examples
+#' samples_list <- list(Sample1_epiAnalysis.txt,
+#'                      Sample2_epiAnalysis.txt,
+#'                      Sample3_epiAnalysis.txt,
+#'                      Sample4_epiAnalysis.txt)
+#'
+#'
+#' epistat <- epiStat(sample_list = samples_list,
+#'                    metadata = ann,
+#'                    colgroups = "Group",
+#'                    colsamples = "Samples",
+#'                    rmUnmeth = FALSE,
+#'                    cores = 40,
+#'                    minGroups = 2,
+#'                    minSampleSize = 2,
+#'                    reduce = FALSE)
 
 
 epiStat <- function(sample_list, metadata, colgroups, colsamples,

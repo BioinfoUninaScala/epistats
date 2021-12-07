@@ -1,13 +1,23 @@
-#' pairtest
-#'
+#' Post-hoc analysis to find which groups are most contributing to the dissimilatity.
+#' @description
+#' This function perform a pairwise PERMANOVA analysis in order to figure out which groups are differing between each other.
 #' @importFrom purrr map reduce
 #' @importFrom dplyr filter select full_join
 #' @importFrom pairwiseAdonis pairwise.adonis2
-#' @param samples list of epimatrices
-#' @param region one region of interest
-#' @param metadata samples metadata
-#' @return dataframe
+#' @param samples A list object containing the epiallele composition matrices from all the samples of the dataset.
+#' @param region A string containing the regionID wanted to perform the analysis.
+#' @param metadata A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.
+#' @return A dataframe containing the p-values for each group comparison, when groups are more than two.
 #' @export
+#' @examples
+#' samples_list <- list(Sample1_epiAnalysis.txt,
+#'                      Sample2_epiAnalysis.txt,
+#'                      Sample3_epiAnalysis.txt,
+#'                      Sample4_epiAnalysis.txt)
+#'
+#' pairtest <- pairtest(samples = samples_list,
+#'                      region = "chr1_34567876_34567923",
+#'                      metadata = ann)
 
 
 pairtest <- function(samples, region, metadata){

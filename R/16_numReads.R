@@ -1,7 +1,7 @@
-#' numReads
+#' Counting the number of reads mapping on one genomic interval.
 #'
-#' @param matrix epialleles matrix
-#' @return integer indicating the depth of a given region
+#' @param matrix Epialleles binary matrix.
+#' @return An integer indicating the coverage observed in the genomic region.
 #' @export
 
 num_reads= function(matrix){

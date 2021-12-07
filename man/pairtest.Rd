@@ -2,20 +2,30 @@
 % Please edit documentation in R/8_pairtest.R
 \name{pairtest}
 \alias{pairtest}
-\title{pairtest}
+\title{Post-hoc analysis to find which groups are most contributing to the dissimilatity.}
 \usage{
 pairtest(samples, region, metadata)
 }
 \arguments{
-\item{samples}{list of epimatrices}
+\item{samples}{A list object containing the epiallele composition matrices from all the samples of the dataset.}
 
-\item{region}{one region of interest}
+\item{region}{A string containing the regionID wanted to perform the analysis.}
 
-\item{metadata}{samples metadata}
+\item{metadata}{A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.}
 }
 \value{
-dataframe
+A dataframe containing the p-values for each group comparison, when groups are more than two.
 }
 \description{
-pairtest
+This function perform a pairwise PERMANOVA analysis in order to figure out which groups are differing between each other.
+}
+\examples{
+samples_list <- list(Sample1_epiAnalysis.txt,
+                     Sample2_epiAnalysis.txt,
+                     Sample3_epiAnalysis.txt,
+                     Sample4_epiAnalysis.txt)
+
+pairtest <- pairtest(samples = samples_list,
+                     region = "chr1_34567876_34567923",
+                     metadata = ann)
 }

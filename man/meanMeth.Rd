@@ -2,16 +2,16 @@
 % Please edit documentation in R/14_meanMeth.R
 \name{meanMeth}
 \alias{meanMeth}
-\title{meanMeth}
+\title{Calculating the average DNA methylation for one interval}
 \usage{
 meanMeth(matrix)
 }
 \arguments{
-\item{matrix}{epialleles matrix}
+\item{matrix}{Epialleles binary matrix.}
 }
 \value{
-numeric indicating the mean meth of the entire region
+A numeric indicating the average DNA methylation of one genomic region
 }
 \description{
-meanMeth
+Calculating the average DNA methylation for one interval
 }

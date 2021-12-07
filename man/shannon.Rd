@@ -2,16 +2,16 @@
 % Please edit documentation in R/18_shannon.R
 \name{shannon}
 \alias{shannon}
-\title{shannon}
+\title{Calcuting the Shannon Entropy in one genomic region.}
 \usage{
 shannon(matrix)
 }
 \arguments{
-\item{matrix}{epialleles matrix}
+\item{matrix}{Epialleles binary matrix.}
 }
 \value{
-numeric indicating shannon entropy value
+A numeric indicating Shannon Entropy value relative to one genomic interval.
 }
 \description{
-shannon
+Calcuting the Shannon Entropy in one genomic region.
 }

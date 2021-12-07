@@ -1,7 +1,7 @@
-#' singleton
+#' Calculating the number of epialleles with just one observation
 #'
-#' @param matrix epialleles matrix
-#' @return integer indicating how many species are represented alone
+#' @param matrix Epiallele binary matrix
+#' @return An integer indicating the number of epiallele with a unique observation in a given interval
 #' @export
 
 singleton <- function(matrix){

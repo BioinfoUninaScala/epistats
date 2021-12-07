@@ -1,13 +1,27 @@
-#' epidiv
+#' Finding the epiallele species which are contributing most to the dissimilarity among groups
 #'
+#' @description
+#' The function returns the information regarding which epialleles are the ones contributing for the dissimilarity of samples among groups.
 #' @importFrom purrr map reduce
 #' @importFrom dplyr filter select full_join
 #' @importFrom vegan simper
-#' @param samples list of epimatrices
-#' @param region one region of interest
-#' @param metadata samples metadata
-#' @return list
+#' @param samples A list object containing the epiallele composition matrices from all the samples of the dataset.
+#' @param region A string containing the regionID wanted to perform the analysis.
+#' @param metadata A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.
+#' @return A list containing the dissimilarity results.
 #' @export
+#' @examples
+#' samples_list <- list(Sample1_epiAnalysis.txt,
+#'                      Sample2_epiAnalysis.txt,
+#'                      Sample3_epiAnalysis.txt,
+#'                      Sample4_epiAnalysis.txt)
+#'
+#' epidiv <- epidiv(samples = samples_list,
+#'                  region = "chr1_34567876_34567923",
+#'                  metadata = ann)
+#'
+#'
+#'
 
 
 epidiv <- function(samples, region, metadata){

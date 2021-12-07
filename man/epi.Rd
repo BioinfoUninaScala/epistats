@@ -2,16 +2,16 @@
 % Please edit documentation in R/12_epi.R
 \name{epi}
 \alias{epi}
-\title{epi}
+\title{Calculating the number of different epialleles observed for one genomic region}
 \usage{
 epi(matrix)
 }
 \arguments{
-\item{matrix}{epialleles matrix}
+\item{matrix}{Epiallele binary matrix.}
 }
 \value{
-character indicating the max frequent epiallelic specie
+A numeric indicating the number of observed epialleles in one interval.
 }
 \description{
-epi
+Calculating the number of different epialleles observed for one genomic region
 }

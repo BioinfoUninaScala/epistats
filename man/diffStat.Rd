@@ -2,7 +2,7 @@
 % Please edit documentation in R/22_diffStat.R
 \name{diffStat}
 \alias{diffStat}
-\title{diffStat}
+\title{Calculate regions that differ for a statistic}
 \usage{
 diffStat(
   intervals_list,
@@ -15,21 +15,42 @@ diffStat(
 )
 }
 \arguments{
-\item{intervals_list}{list of samples intervals. It corresponds to the output 'epi' from the epiAnalysis function}
+\item{intervals_list}{A list object. It corresponds to a list containing the summary outputs obtained through epiAnalysis() function (the ones containing the summary statistics, such as Shannon Entropy, Mean CpGs distance, etc...).}
 
-\item{metadata}{your samples metadata. The input file must contain the columns named "Group" and "Samples"}
+\item{metadata}{Samples metadata provided as table. This input data should contain specific columns for samples names and groups distinction.}
 
-\item{statistic}{parameter indicating the colname of the statistic the user wants to use to perform the test}
+\item{statistic}{Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").}
 
-\item{groupcol}{character indicating the Group colname in the metadata used to compare the statistics}
+\item{groupcol}{Character indicating the column name of the Groups in the metadata used to compare the statistics}
 
-\item{cores}{number of cores to use}
+\item{cores}{Integer indicating the number of cores used to perform the computation}
 
-\item{reduce}{logical indicating whether adiacent overlapping intervals should be reduced or not}
+\item{reduce}{Logical indicating whether adjacent overlapping intervals should be reduced as a unique interval or not}
 }
 \value{
-Table containing the p-values obtained comparing the given statistic between samples of different groups
+A dataframe containing the statistical test results.
+
+id = Regions coordinates given as ID.
+
+p.value = significance of the difference found for each analysed region
+
+test = test used to perform the analysis (depending on the number of distinct groups used for the test)
 }
 \description{
-diffStat
+Getting the regions that differ for one statistic (e.g. Shannon Entropy, Average DNA Methylation, ...) among distinct conditions.
+}
+\examples{
+data(epistats)
+samples_list <- list(Sample1_intervals.bed,
+                     Sample2_intervals.bed,
+                     Sample3_intervals.bed,
+                     Sample4_intervals.bed)
+
+diff <- diffStat(intervals_list = samples_list,
+                 metadata = ann,
+                 colsamples = "Samples",
+                 statistic = "Shannon",
+                 groupcol = "Group",
+                 cores = 40,
+                 reduce = FALSE)
 }

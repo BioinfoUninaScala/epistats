@@ -2,10 +2,10 @@
 % Please edit documentation in R/23_diffAdjust.R
 \name{diffAdjust}
 \alias{diffAdjust}
-\title{diffAdjust}
+\title{Getting regions which differ for one statistic (such as Shannon Entropy, etc...) through linear model and possibly adjusting for a covariate}
 \usage{
 diffAdjust(
-  data,
+  intervals_list,
   metadata,
   samples,
   statistic,
@@ -16,13 +16,26 @@ diffAdjust(
 )
 }
 \arguments{
-\item{metadata}{your samples metadata. The input file must contain the columns named "Group" and "Samples"}
+\item{intervals_list}{A list object. It corresponds to a list containing the summary outputs obtained through epiAnalysis() function (the ones containing the summary statistics, such as Shannon Entropy, Mean CpGs distance, etc...).}
 
-\item{intervals_list}{list of samples intervals. It corresponds to the output 'epi' from the epiAnalysis function}
+\item{metadata}{Samples metadata provided as table. This input data should contain specific columns for samples names and groups distinction.}
+
+\item{statistic}{Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").}
+
+\item{groupcol}{Character indicating the column name of the Groups in the metadata used to compare the statistics.}
+
+\item{covariate}{Character indicating the column name of the covariate to be used to adjust the linear model.}
+
+\item{cores}{An integer indicating the number of cores to be used to perform the computation.}
+
+\item{reduce}{Logical indicating whether adjacent overlapping intervals should be reduced as a unique interval or not.}
 }
 \value{
-Dataframe with statistics
+A dataframe containing the statistical test results.
 }
 \description{
-diffAdjust
+This function is implemented to get different significant regions using a linear model adjusted for a covariate (different Points in time, different tissue, etc...).
+}
+\examples{
+
 }

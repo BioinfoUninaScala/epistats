@@ -1,20 +1,43 @@
-#' makeBins
+#' Designing target regions containing a fixed number of CpG sites
 #'
+#' @description
+#' This functions represents one of the two methods available in the epistats package to design customised regions. makeBins() is provided to design target regions which contain a given number of CpG sites (or any of the other C* patterns).
 #' @importFrom parallel mclapply
 #' @importFrom GenomeInfoDb seqlevels
 #' @importFrom IRanges IRanges IRangesList ranges
 #' @importFrom Biostrings matchPattern reverseComplement DNAString
 #' @importFrom GenomicRanges findOverlaps countOverlaps
 #' @importFrom S4Vectors countQueryHits queryHits
-#' @param gr GRanges
-#' @param Genome fasta file
-#' @param mode character pattern
-#' @param n num CpG in the bin
-#' @param min.binsize min length of a bin
-#' @param max.binsize max length of a bin
-#' @param cores number of cores to use
-#' @return GRanges
+#' @param gr A GRanges object obtained from the previous filtering functions.
+#' @param Genome A DNAStringSet containing the fasta genome.
+#' @param mode A character indicanting the pattern to be used to perform the epiallele analysis ("CG", "CA", "CT", "CC")
+#' @param n An integer indicating the number of CpGs sites to be contained in the target region.
+#' @param min.binsize An integer indicating the minimum length size of each bin
+#' @param max.binsize An integer indicating the maximum length size of each bin
+#' @param cores An integer indicating the number of cores to be used for the process
+#' @return A GRanges object containing the newly designed target regions with the features specified through the function parameters.
 #' @export
+#' @examples
+#' #' data <- loadInput(bamfile, genomefile)
+#' algn <- data[[1]]
+#'
+#' ## Keeping only standard chromosomes
+#' filtered <- filterBAM(algn,
+#'                       keepStChr =TRUE,
+#'                       keepM = FALSE,
+#'                       retainChr = NULL)
+#'
+#' ## Selecting regions with a minimum coverage
+#' covered <- filterByCoverage(algn, threshold = 50, minsize = 8)
+#'
+#' ## Designing regions containing 4 CpG sites
+#'   regions = makeBins(gr = covered,
+#'                      Genome = Genome,
+#'                      mode = "CG",
+#'                      n = 4,
+#'                      min.binsize = 8,
+#'                      max.binsize = 100,
+#'                      cores = 40)
 
 makeBins <- function(gr,
                      Genome,

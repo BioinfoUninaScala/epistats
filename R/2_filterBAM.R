@@ -1,12 +1,30 @@
-#' filterBAM
+#' Filtering function
 #'
+#' @description
+#' This function is provided to filter only selected regions from bamfiles (specific chromosomes of interest, etc...).
 #' @importFrom GenomeInfoDb keepSeqlevels keepStandardChromosomes dropSeqlevels
-#' @param algn GAlignments object
-#' @param keepStChr Logical indicating if only standard chromosomes should be kept
-#' @param keepM Logical indicating if the mitochondrial chromosome should be kept or not
-#' @param retainChr Vector containing the strings of the chromosomes to be analysed
-#' @return filtered GAlignments object
+#' @param algn GAlignments object containing aligned reads
+#' @param keepStChr Logical indicating whether only standard chromosomes should be kept
+#' @param keepM Logical indicating whether the mitochondrial chromosome should be kept for the analysis or not
+#' @param retainChr Vector containing the chromosomes to be analysed as characters. Note that the strings should correspond to the seqlevels contained in the GAlignment object.
+#' @return A filtered GAlignments object.
 #' @export
+#' @examples
+#' data <- loadInput(bamfile, genomefile)
+#' algn <- data[[1]]
+#'
+#' ## Keeping only standard chromosomes
+#' filtered <- filterBAM(algn,
+#'                       keepStChr =TRUE,
+#'                       keepM = FALSE,
+#'                       retainChr = NULL)
+#'
+#' ## Keeping only selected chromosomes
+#' chr <- c("chr1", "chr2, "chr3")
+#' filtered <- filterBAM(algn,
+#'                       keepStChr = FALSE,
+#'                       keepM = FALSE,
+#'                       retainChr = chr)
 
 filterBAM <- function(algn,
                       keepStChr=TRUE,

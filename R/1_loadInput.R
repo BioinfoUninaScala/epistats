@@ -1,13 +1,20 @@
 #' loadInput
 #'
+#' Loading inputa data.
+#'
 #' @importFrom Biostrings readDNAStringSet
 #' @importFrom Rsamtools ScanBamParam
 #' @importFrom GenomicAlignments readGAlignments
 #' @importFrom GenomeInfoDb seqlevels
-#' @param bamfile path to bamfile
-#' @param genomefile path to genome/fasta
-#' @return data
+#' @param bamfile path to bamfile to be analysed. Note that folder containing the bamfile should also contain the bam index.
+#' @param genomefile path to genome (FASTA format).
+#' @return A list containg a GAlignment object and a DNAStringSet object.
 #' @export
+#' @examples
+#' bamfile = ("./bamfilelocation")
+#' genomefile = ("./genome.fa")
+#' data <- loadInput(bamfile, genomefile)
+#'
 
 loadInput=function(bamfile,
                    genomefile)

@@ -2,16 +2,16 @@
 % Please edit documentation in R/11_cdist.R
 \name{cdist}
 \alias{cdist}
-\title{cdist}
+\title{Calcutating the mean distance among the CpG sites contained in the analysed region}
 \usage{
 cdist(matrix)
 }
 \arguments{
-\item{matrix}{epialleles matrix}
+\item{matrix}{Epiallele binary matrix for one genomic region}
 }
 \value{
-integer indicating mean dist between CpG in the interval
+Integer indicating the mean distance between CpG in the interval
 }
 \description{
-cdist
+Calcutating the mean distance among the CpG sites contained in the analysed region
 }
