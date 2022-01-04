@@ -10,6 +10,8 @@ diffStat(
   colsamples,
   statistic,
   groupcol,
+  min.per.group = 2,
+  min.groups = 2,
   cores = 1,
   reduce = FALSE
 )
@@ -22,6 +24,10 @@ diffStat(
 \item{statistic}{Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").}
 
 \item{groupcol}{Character indicating the column name of the Groups in the metadata used to compare the statistics}
+
+\item{min.per.group}{An integer indicating the minimum number of samples for group required to perform the test.}
+
+\item{min.groups}{An integer indicating the minimum number of groups wanted to perform the test.}
 
 \item{cores}{Integer indicating the number of cores used to perform the computation}
 
@@ -51,6 +57,8 @@ diff <- diffStat(intervals_list = samples_list,
                  colsamples = "Samples",
                  statistic = "Shannon",
                  groupcol = "Group",
+                 min.per.group = 2,
+                 min.groups = 2,
                  cores = 40,
                  reduce = FALSE)
 }

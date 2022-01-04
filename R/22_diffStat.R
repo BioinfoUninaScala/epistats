@@ -9,6 +9,8 @@
 #' @param metadata Samples metadata provided as table. This input data should contain specific columns for samples names and groups distinction.
 #' @param statistic Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").
 #' @param groupcol Character indicating the column name of the Groups in the metadata used to compare the statistics
+#' @param min.per.group An integer indicating the minimum number of samples for group required to perform the test.
+#' @param min.groups An integer indicating the minimum number of groups wanted to perform the test.
 #' @param cores Integer indicating the number of cores used to perform the computation
 #' @param reduce Logical indicating whether adjacent overlapping intervals should be reduced as a unique interval or not
 #' @return A dataframe containing the statistical test results.
@@ -32,6 +34,8 @@
 #'                  colsamples = "Samples",
 #'                  statistic = "Shannon",
 #'                  groupcol = "Group",
+#'                  min.per.group = 2,
+#'                  min.groups = 2,
 #'                  cores = 40,
 #'                  reduce = FALSE)
 
@@ -40,6 +44,8 @@ diffStat <- function(intervals_list,
                      colsamples,
                      statistic,
                      groupcol,
+                     min.per.group=2,
+                     min.groups=2,
                      cores=1,
                      reduce=FALSE){
   ## Create id for each dataframe and select only id and the statistic to compare
@@ -66,6 +72,8 @@ diffStat <- function(intervals_list,
                  colsamples = colsamples,
                  statistic = statistic,
                  groupcol = groupcol,
+                 min.per.group = min.per.group,
+                 min.groups = min.groups,
                  reduce = reduce)
   }
   parallel::stopCluster(cl)
@@ -76,16 +84,16 @@ diffStat <- function(intervals_list,
 }
 
 ## Table with all data
-onefun <- function(datalst, metadata, colsamples, statistic, groupcol, reduce){
+onefun <- function(datalst, metadata, colsamples, statistic, groupcol, min.per.group, min.groups, reduce){
   datalst = datalst %>% purrr::map_df(~ .)
   ## Filter regions
   filter <- datalst %>% dplyr::left_join(., metadata, by = c("sample" = colsamples)) %>%
     dplyr::group_by(id, .[groupcol]) %>%
     dplyr::mutate(samples = dplyr::n_distinct(sample)) %>%
-    dplyr::filter(samples >= 3) %>%
+    dplyr::filter(samples >= min.per.group) %>%
     dplyr::group_by(id) %>%
     dplyr::mutate(groups = dplyr::n_distinct(all_of(across(groupcol)))) %>%
-    dplyr::filter(groups >= 2 & samples >= 3) %>%
+    dplyr::filter(groups >= min.groups & samples >= min.per.group) %>%
     dplyr::ungroup() %>%
     dplyr::select(1:4)
   ## Find Diff

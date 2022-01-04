@@ -16,3 +16,7 @@ Imports: Biostrings, GenomicAlignments, GenomeInfoDb, GenomicRanges, IRanges,
          dplyr, stats, vegan, pairwiseAdonis, magrittr, Rsamtools, tidyr, 
          broom, seq2pathway, plyranges, doParallel
 RoxygenNote: 7.1.2
+Suggests:
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr
