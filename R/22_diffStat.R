@@ -95,7 +95,7 @@ onefun <- function(datalst, metadata, colsamples, statistic, groupcol, min.per.g
     dplyr::mutate(groups = dplyr::n_distinct(all_of(across(groupcol)))) %>%
     dplyr::filter(groups >= min.groups & samples >= min.per.group) %>%
     dplyr::ungroup() %>%
-    dplyr::select(1:4)
+    dplyr::select(1:3, groupcol)
   ## Find Diff
   if(dim(filter)[1] == 0){
     res = filter
