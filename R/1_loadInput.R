@@ -1,6 +1,4 @@
-#' loadInput
-#'
-#' Loading inputa data.
+#' Loading Input data.
 #'
 #' @importFrom Biostrings readDNAStringSet
 #' @importFrom Rsamtools ScanBamParam

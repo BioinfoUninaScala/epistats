@@ -47,7 +47,7 @@ epiStat <- function(sample_list, metadata, colgroups, colsamples,
                     minGroups = 2, minSampleSize = 2, reduce = FALSE){
   ## Filtraggio regioni
   list = sample_list %>% map(select, id) %>%
-    map(distinct, id) %>%
+    map(dplyr::distinct, id) %>%
     purrr::map2(., names(.), ~ dplyr::mutate(.x, sample = .y)) %>%
     purrr::map_df(~ .) %>%
     dplyr::group_by(id) %>%

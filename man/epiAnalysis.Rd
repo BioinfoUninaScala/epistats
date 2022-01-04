@@ -2,7 +2,7 @@
 % Please edit documentation in R/6_epiAnalysis.R
 \name{epiAnalysis}
 \alias{epiAnalysis}
-\title{Extracting epiallele information from the customised target regions}
+\title{Extracting epiallele information from customised target regions.}
 \usage{
 epiAnalysis(
   align,
@@ -63,7 +63,7 @@ log = Dataframe containing the coordinates of the genomic regions that have been
 This is the function which takes as input the user-defined regions of interest and it returns for each of them epiallele composition and summary statistics, such as average DNA methylation, Shannon Entropy, etc...
 }
 \examples{
-#' data <- loadInput(bamfile, genomefile)
+data <- loadInput(bamfile, genomefile)
 algn <- data[[1]]
 Genome <- data [[2]]
 

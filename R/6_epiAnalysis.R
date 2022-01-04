@@ -1,4 +1,4 @@
-#' Extracting epiallele information from the customised target regions
+#' Extracting epiallele information from customised target regions.
 #' @description
 #' This is the function which takes as input the user-defined regions of interest and it returns for each of them epiallele composition and summary statistics, such as average DNA methylation, Shannon Entropy, etc...
 #' @importFrom BSgenome getSeq
@@ -36,7 +36,7 @@
 #' log = Dataframe containing the coordinates of the genomic regions that have been discarded for the analysis.
 #' @export
 #' @examples
-#'#' data <- loadInput(bamfile, genomefile)
+#' data <- loadInput(bamfile, genomefile)
 #' algn <- data[[1]]
 #' Genome <- data [[2]]
 #'

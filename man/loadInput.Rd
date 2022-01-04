@@ -2,7 +2,7 @@
 % Please edit documentation in R/1_loadInput.R
 \name{loadInput}
 \alias{loadInput}
-\title{loadInput}
+\title{Loading Input data.}
 \usage{
 loadInput(bamfile, genomefile)
 }
@@ -15,7 +15,7 @@ loadInput(bamfile, genomefile)
 A list containg a GAlignment object and a DNAStringSet object.
 }
 \description{
-Loading inputa data.
+Loading Input data.
 }
 \examples{
 bamfile = ("./bamfilelocation")

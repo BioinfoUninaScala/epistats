@@ -11,6 +11,8 @@
 #' @param statistic Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").
 #' @param groupcol Character indicating the column name of the Groups in the metadata used to compare the statistics.
 #' @param covariate Character indicating the column name of the covariate to be used to adjust the linear model.
+#' @param min.per.group An integer indicating the minimum number of samples for group required to perform the test.
+#' @param min.groups An integer indicating the minimum number of groups wanted to perform the test.
 #' @param cores An integer indicating the number of cores to be used to perform the computation.
 #' @param reduce Logical indicating whether adjacent overlapping intervals should be reduced as a unique interval or not.
 #' @return A dataframe containing the statistical test results.
@@ -22,23 +24,25 @@
 #'                      Sample3_intervals.bed,
 #'                      Sample4_intervals.bed)
 #'
-#' diffModel <- diffAdjust(intervals_list = samples_list,
-#'                         metadata = ann,
-#'                         samples = "Samples",
-#'                         statistic = "Shannon",
-#'                         groupcol = "Group",
-#'                         covariate = "Time",
-#'                         cores = 40,
-#'                         reduce = FALSE)
+#' diffresult <- diffAdjust(intervals_list = samples_list,
+#'                          metadata = ann,
+#'                          samples = "Samples",
+#'                          statistic = "Shannon",
+#'                          groupcol = "Group",
+#'                          covariate = "Time",
+#'                          cores = 40,
+#'                          reduce = FALSE)
 
-diffAdjust <- function(intervals_list,
-                       metadata,
-                       samples,
-                       statistic,
-                       groupcol,
-                       covariate,
-                       cores=1,
-                       reduce=FALSE){
+diffModel <- function(intervals_list,
+                      metadata,
+                      samples,
+                      statistic,
+                      groupcol,
+                      covariate,
+                      min.per.group=2,
+                      min.groups=2,
+                      cores=1,
+                      reduce=FALSE){
   # 1. Filter each dataframe of the samples list to keep only regions covered by at least 50 reads
   # 2. Add to each dataframe of the samples list two columns (shanNorm : normalized shannon, id : paste chr_start_end)
   # 3. Remove from each dataframe of the samples list the duplicated rows (you can have two epialleles with the highest frequency)
@@ -66,6 +70,8 @@ diffAdjust <- function(intervals_list,
                statistic = statistic,
                groupcol = groupcol,
                covariate = covariate,
+               min.per.group = min.per.group,
+               min.groups = min.groups,
                reduce = reduce)
   }
   parallel::stopCluster(cl)
@@ -79,17 +85,17 @@ diffAdjust <- function(intervals_list,
 }
 
 
-onef <- function(df, metadata, samples, statistic, groupcol, covariate, reduce){
+onef <- function(df, metadata, samples, statistic, groupcol, covariate, min.per.group, min.groups, reduce){
   df <- df %>% dplyr::group_by(id) %>%
     dplyr::left_join(., metadata, by = c("sample" = samples)) %>%
     dplyr::ungroup()
   ### Check regions to test
   filt_step <- df %>% dplyr::group_by(id, .[groupcol]) %>% dplyr::count(.[covariate]) %>%
-    dplyr::ungroup() %>% dplyr::filter(n >= 2) %>%
+    dplyr::ungroup() %>% dplyr::filter(n >= min.per.group) %>%
     dplyr::group_by(id, .[groupcol]) %>% dplyr::count() %>%
     dplyr::ungroup() %>% dplyr::filter(n >= 2) %>%
     dplyr::group_by(id) %>% dplyr::count() %>%
-    dplyr::ungroup() %>% dplyr::filter(n >= 2)
+    dplyr::ungroup() %>% dplyr::filter(n >= min.groups)
   ### Subset df regions that passed the filter step
   totest <- df %>% dplyr::filter(id %in% filt_step$id)
   ### Check if totest is an empty df
