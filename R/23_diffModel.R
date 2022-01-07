@@ -80,7 +80,6 @@ diffModel <- function(intervals_list,
     dplyr::mutate(p.adjust_Group = p.adjust(p.value_Group, method = "fdr"), .after = p.value_Group) %>%
     dplyr::mutate(p.adjust_Covariate = p.adjust(p.value_Covariate, method = "fdr"), .after = p.value_Covariate) %>%
     dplyr::mutate(p.adjust_Interaction = p.adjust(p.value_Interaction, method = "fdr"), .after = p.value_Interaction)
-
   return(res)
 }
 
@@ -107,14 +106,19 @@ onef <- function(df, metadata, samples, statistic, groupcol, covariate, min.per.
       dplyr::mutate(Model = list(aov(as.formula(paste(statistic, paste(groupcol, covariate, sep = "*"), sep = "~")), data = data))) %>%
       dplyr::mutate(p.value_Group = broom::tidy(Model)[["p.value"]][1],
                     p.value_Covariate = broom::tidy(Model)[["p.value"]][2],
-                    p.value_Interaction = broom::tidy(Model)[["p.value"]][3]) %>%
+                    p.value_Interaction = broom::tidy(Model)[["p.value"]][3],
+                    intercept = coefficients(Model)[[1]],
+                    group = coefficients(Model)[[2]],
+                    covariate = coefficients(Model)[[3]],
+                    interaction = coefficients(Model)[[4]]) %>%
       tidyr::unnest(id) %>% dplyr::ungroup() %>%
-      dplyr::select(1,4:6) %>%
+      dplyr::select(1,4:10) %>%
       tidyr::separate(id, c("seqnames", "start", "end"), "_", remove = FALSE, convert = TRUE)
     ## Reduce
     if(reduce == TRUE){
+      varcols <- colnames(res)[-c(1:4)]
       res <- res %>% plyranges::as_granges() %>%
-        plyranges::group_by(p.value_Group, p.value_Covariate, p.value_Interaction) %>%
+        plyranges::group_by(!!!rlang::syms(varcols)) %>%
         plyranges::reduce_ranges() %>%
         dplyr::as_tibble() %>%
         dplyr::mutate(id = paste(seqnames, start, end, sep = "_"), .before = seqnames)
