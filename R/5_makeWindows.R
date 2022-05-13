@@ -57,9 +57,9 @@ makeWindows <- function(gr,
     c_pos=data[["c_pos"]]
   }else{
     data_plus <- filterWindows(windows@unlistData, Genome, mode, min.C, max.C, cores = cores)
-    data_plus=lapply(data_plus, function(x) GenomicRanges::strand(x)="+")
+    strand(data_plus[["windows_filt"]]) <- "+"
     data_minus=filterWindows(windows@unlistData, Genome, Biostrings::reverseComplement(Biostrings::DNAString(mode)), min.C, max.C, cores = cores)
-    data_minus=lapply(data_minus, function(x) GenomicRanges::strand(x)="-")
+    strand(data_minus[["windows_filt"]]) <- "-"
     ####unisce plus e minus
     c_pos=c(data_plus[["c_pos"]], data_minus[["cpos"]])
     windows_filt=c(data_plus[["windows_filt"]], data_minus[["windows_filt"]])

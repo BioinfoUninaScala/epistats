@@ -382,10 +382,9 @@ epiallele_analyse=function(align,
       length(reads) < threshold)
   {
     out[["log"]]=as.data.frame(bin)
-  }else{
-
+  } else {
     ##se strand * ed entrambi gli allineamenti sono non vuoti
-    if(bin@strand@values =="*" & (length(align_minus)>0 & length(align_plus)>0))
+    if(bin@strand@values == "*" & (length(align_minus)>0 & length(align_plus)>0))
     {
       cPos=get_cPos(rseq, mode,"*",bisu.Thresh)
       data_plus=tidyr::as_tibble(get_epiMatrix(align_plus, bisu.Thresh, remove.Amb, cPos[[1]], cPos[[2]], strand = "plus", retain.reads = retain.reads, mode))
@@ -418,8 +417,8 @@ epiallele_analyse=function(align,
         }
       }
       ##se lo strand * e solo il positivo e' pieno oppure se lo strand e' +
-    }else if(bin@strand@values =="*" & (length(align_minus)==0 & length(align_plus)>0)|
-             bin@strand@values =="+")
+    } else if (bin@strand@values == "*" & (length(align_minus)==0 & length(align_plus)>0)|
+             bin@strand@values == "+")
     {
       cPos=get_cPos(rseq,mode,"plus",bisu.Thresh)
       data_plus=tidyr::as_tibble(get_epiMatrix(align_plus, bisu.Thresh, remove.Amb, cPos[[1]], cPos[[2]], "plus", retain.reads, mode))
@@ -460,7 +459,7 @@ epiallele_analyse_Block <- function(df,
   ret_list = list()
   for (i in 1:nrow(df)) {
     ret_list[[i]] = epiallele_analyse(align= aln_c,
-                                      bin = GenomicRanges::GRanges(df[i,]$seqnames,IRanges::IRanges(df[i,]$start,df[i,]$end)),
+                                      bin = GenomicRanges::GRanges(df[i,]$seqnames,IRanges::IRanges(df[i,]$start,df[i,]$end), strand = df[i,]$strand),
                                       threshold = threshold,
                                       bisu.Thresh = bisu.Thresh,
                                       stranded = stranded,

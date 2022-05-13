@@ -84,7 +84,15 @@ diffModel <- function(intervals_list,
 }
 
 
-onef <- function(df, metadata, samples, statistic, groupcol, covariate, min.per.group, min.groups, reduce){
+onef <- function(df,
+                 metadata,
+                 samples,
+                 statistic,
+                 groupcol,
+                 covariate,
+                 min.per.group,
+                 min.groups,
+                 reduce){
   df <- df %>% dplyr::group_by(id) %>%
     dplyr::left_join(., metadata, by = c("sample" = samples)) %>%
     dplyr::ungroup()

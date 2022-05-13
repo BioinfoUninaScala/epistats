@@ -6,6 +6,6 @@
 
 cdist <- function(matrix){
   Cpos=as.numeric(names(matrix))
-  dist=round(mean(Cpos[-1]-Cpos[-length(Cpos)])/length(Cpos),2)
+  dist=round(mean(Cpos[-1]-Cpos[-length(Cpos)]),2)
   return(dist)
 }
