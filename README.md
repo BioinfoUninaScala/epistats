@@ -27,7 +27,7 @@ install_github("BioinfoUninaScala/epistats",
                repos=BiocManager::repositories(),
                dependencies=TRUE, type="source")
 ```
-
+----------
 
 ### Usage 
 
@@ -40,3 +40,5 @@ install_github("BioinfoUninaScala/epistats",
 * `epiAnalysis`
 * `epiStat`
 * `diffStat`
+
+
