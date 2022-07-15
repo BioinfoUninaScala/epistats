@@ -41,4 +41,4 @@ install_github("BioinfoUninaScala/epistats",
 * `epiStat`
 * `diffStat`
 
-See [vignettes](/vignettes) for details.
+See [vignettes](/vignettes/my-vignette.Rmd) for details.
