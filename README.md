@@ -31,3 +31,12 @@ install_github("BioinfoUninaScala/epistats",
 
 ### Usage 
 
+#### Main functions
+
+* `loadInput`
+* `filterByCoverage`
+* `makeBins`
+* `makeWindows`
+* `epiAnalysis`
+* `epiStat`
+* `diffStat`
