@@ -41,4 +41,35 @@ install_github("BioinfoUninaScala/epistats",
 * `epiStat`
 * `diffStat`
 
+### Workflow 
+
+The functions that are provided by the tool can be grouped into 4 modules: 
+
+**1. Loading functions**
+
+Input data consist of the alignment file and a reference genome provided as BAM and FASTA files, rispectively. 
+The paths of these files are to be specified as parameters in the loading function in order to be imported in the global environment. 
+Input files are then loaded as GAlignment and DNAStringSet objects, rispectively.
+You can get the single objects by subsetting them from the list returned by the `loadInput` function. 
+Filtering functions allow to subset the aligned reads covering only desired regions. 
+
+* `filterBAM` : it allows to subset from the GAlignments objects only reads mapped on the specified chromosomes.
+* `filterByCoverage` : it allows to select those genomic regions which are covered by minimum number of reads.
+
+**2. Target regions design**
+
+EpiStatProfiler allows the customization of the genomic regions to be profiled. The user can design genomic regions using two different methods.
+The figure below show the rationale that is behind these two methods. 
+
+* `makeBins` : this function allows to build genomic regions having a different length size, but containing a fixed number of CpG sites (or any other pattern used to perform the analysis (e.g., "CA", "CT")).
+
+* `makeWindows` : this function allows to build genomic regions by using sliding windows of fixed length and step size, containing a variable numer of CpX sites.
+
+
+**3. Epialleles extraction**
+
+**4. Statistics**
+
+
+
 See [vignettes](/vignettes/my-vignette.Rmd) for details.
