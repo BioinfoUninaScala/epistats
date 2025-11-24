@@ -20,7 +20,7 @@ runRDA <- function(samples, region, printData = FALSE, rmUnmeth = FALSE){
     print("Plotting is not possible with just one epiallele specie")
   } else {
     myrda <- vegan::rda(data)
-    p <- biplot(myrda, scaling = "symmetric")
+    p <- stats::biplot(myrda, scaling = "symmetric")
     if(printData == TRUE){
       print(data)
     }

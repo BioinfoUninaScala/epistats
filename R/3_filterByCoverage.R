@@ -19,7 +19,7 @@ filterByCoverage <- function(algn,
   cvg <- GenomicAlignments::coverage(algn)                                      ### coverage per chr
   cvg <- GenomicRanges::GRanges(cvg)                                            ### estraggo i GRanges di queste regioni
   cvg <- cvg[cvg$score >= threshold]                                            ### seleziono i GRanges che hanno un n di reads(threshold) in particolare
-  cvg <- cvg[cvg$score <= quantile(cvg$score, probs = seq(0, 1, 0.001))[1000]]
+  cvg <- cvg[cvg$score <= stats::quantile(cvg$score, probs = seq(0, 1, 0.001))[1000]]
   cvg <- IRanges::reduce(cvg)                                                   ### unisco i GRanges contigui
   cvg = cvg[which(GenomicRanges::width(cvg)>= minsize)]                         ### elimino i ranges con width<1
   cat("done\n")

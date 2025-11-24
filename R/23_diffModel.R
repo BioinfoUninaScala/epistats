@@ -98,14 +98,14 @@ onef <- function(df,
   } else {
     ## Perform analysis
     res <- totest %>% dplyr::nest_by(id) %>%
-      dplyr::mutate(Model = list(aov(as.formula(paste(statistic, paste(groupcol, covariate, sep = "*"), sep = "~")), data = data))) %>%
+      dplyr::mutate(Model = list(stats::aov(stats::as.formula(paste(statistic, paste(groupcol, covariate, sep = "*"), sep = "~")), data = data))) %>%
       dplyr::mutate(p.value_Group = broom::tidy(Model)[["p.value"]][1],
                     p.value_Covariate = broom::tidy(Model)[["p.value"]][2],
                     p.value_Interaction = broom::tidy(Model)[["p.value"]][3],
-                    intercept = coefficients(Model)[[1]],
-                    group = coefficients(Model)[[2]],
-                    covariate = coefficients(Model)[[3]],
-                    interaction = coefficients(Model)[[4]]) %>%
+                    intercept = stats::coefficients(Model)[[1]],
+                    group = stats::coefficients(Model)[[2]],
+                    covariate = stats::coefficients(Model)[[3]],
+                    interaction = stats::coefficients(Model)[[4]]) %>%
       tidyr::unnest(id) %>% dplyr::ungroup() %>%
       dplyr::select(1,4:10) %>%
       tidyr::separate(id, c("seqnames", "start", "end"), "_", remove = FALSE, convert = TRUE)

@@ -97,7 +97,7 @@ epiAnalysisONT= function(
         sparseMati = regs,
         .packages = c("Matrix","GenomicRanges","IRanges","data.table"),
         .export   = c("epiallele_analyse_ont", "prepareSparseIndex",
-                      "encodeEpiallele", "get_out", "subsetSparseByRegions",
+                      "encodeEpiallele", "get_out_ont", "subsetSparseByRegions",
                       "code_map_epiallele", "stranded", "threshold", "myfuns")
       ) %dopar% {
         sparseMati_gr <- prepareSparseIndex(sparseMati)
@@ -131,15 +131,15 @@ epiAnalysisONT= function(
   
   message('Saving results for sample ', sample_name, ' in' , pathDir,  ' folder...')
   
-  fwrite(intervals,
+  data.table::fwrite(intervals,
          file = file.path(pathDir, paste0(sample_name, "_intervals.bed")),
          sep = "\t")
   
-  fwrite(epi,
+  data.table::fwrite(epi,
          file = file.path(pathDir, paste0(sample_name, "_epiAnalysis.txt")),
          sep = "\t")
   
-  fwrite(log,
+  data.table::fwrite(log,
          file = file.path(pathDir, paste0(sample_name, "_log.txt")),
          sep = "\t",
          col.names = FALSE)
@@ -240,7 +240,7 @@ epiallele_analyse_ont <- function(
       epi_mat_plus <- encodeEpiallele(sparseMati_plus, code_map_epiallele)
       colnames(epi_mat_plus) <- as.numeric(sub(".*_", "", colnames(epi_mat_plus)))
       
-      out_plus <- get_out(epi_mat_plus, out = list(), strand="+", coord=bin, myfuns)
+      out_plus <- get_out_ont(epi_mat_plus, out = list(), strand="+", coord=bin, myfuns)
       out$epi       <- rbind(out$epi, out_plus$epi)
       out$intervals <- rbind(out$intervals, out_plus$intervals)
       out$log       <- rbind(out$log, out_plus$log)
@@ -251,7 +251,7 @@ epiallele_analyse_ont <- function(
       epi_mat_minus <- encodeEpiallele(sparseMati_minus, code_map_epiallele)
       colnames(epi_mat_minus) <- as.numeric(sub(".*_", "", colnames(epi_mat_minus)))
       
-      out_minus <- get_out(epi_mat_minus, out = list(), strand="-", coord=bin, myfuns)
+      out_minus <- get_out_ont(epi_mat_minus, out = list(), strand="-", coord=bin, myfuns)
       out$epi       <- rbind(out$epi, out_minus$epi)
       out$intervals <- rbind(out$intervals, out_minus$intervals)
       out$log       <- rbind(out$log, out_minus$log)
@@ -267,7 +267,7 @@ epiallele_analyse_ont <- function(
                                     code_map_epiallele = code_map_epiallele)
     
     colnames(epi_mat_both) <- as.numeric(sub(".*_", "", colnames(epi_mat_both)))
-    out <- get_out(epi_mat_both, out = out, strand = "*", coord = bin, myfuns = myfuns)
+    out <- get_out_ont(epi_mat_both, out = out, strand = "*", coord = bin, myfuns = myfuns)
   }
   
   return(out)
@@ -296,7 +296,7 @@ encodeEpiallele <- function(sparseMat,
   newMat <- sparseMat
   newMat@x <- new_vals
   
-  validObject(newMat)  
+  methods::validObject(newMat)  
   
   newMat_dense <- as.matrix(newMat)
   newMat_df <- as.data.frame(newMat_dense)
@@ -305,7 +305,7 @@ encodeEpiallele <- function(sparseMat,
 }
 
 
-get_out=function(epi_df, out, strand, coord, myfuns)
+get_out_ont=function(epi_df, out, strand, coord, myfuns)
 {
   parameters=lapply(myfuns, function(x) x(epi_df))
   param_df <- as.data.frame(as.list(sapply(parameters, function(x) {

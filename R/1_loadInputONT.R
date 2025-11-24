@@ -4,7 +4,6 @@
 #' @import dplyr
 #' @import stringr
 #' @importFrom data.table fread
-#' @importFrom IRanges IRanges
 #' @importFrom GenomicRanges findOverlaps
 #' @importFrom BSgenome getBSgenome
 #' @param modkit_file 
@@ -333,16 +332,16 @@ check_consistency <- function(read_coords_df, mod_df, base_coords_df){
 build_sparse_matrix <- function(base_coords_df, read_coords_df, mod_df) {
   message('Building sparse matrix...')
   base_key   <- paste(base_coords_df$chr, base_coords_df$pos, sep = "_")
-  base_index <- setNames(seq_along(base_key), base_key)
+  base_index <- stats::setNames(seq_along(base_key), base_key)
   
   read_gr <- GRanges(
     seqnames = read_coords_df$chr,
-    ranges   = IRanges(start = read_coords_df$start,
+    ranges   = IRanges::IRanges(start = read_coords_df$start,
                        end   = read_coords_df$end)
   )
   base_gr <- GRanges(
     seqnames = base_coords_df$chr,
-    ranges   = IRanges(start = base_coords_df$pos,
+    ranges   = IRanges::IRanges(start = base_coords_df$pos,
                        end   = base_coords_df$pos)
   )
   
@@ -365,7 +364,7 @@ build_sparse_matrix <- function(base_coords_df, read_coords_df, mod_df) {
   
   f_mod_df   <- mod_df[!is.na(mod_df$col), ]
   
-  read_index <- setNames(seq_len(nrow(mat_base)), rownames(mat_base))
+  read_index <- stats::setNames(seq_len(nrow(mat_base)), rownames(mat_base))
   f_mod_df$row <- read_index[f_mod_df$read_id]
   f_mod_df <- f_mod_df[!is.na(f_mod_df$row), ]
   

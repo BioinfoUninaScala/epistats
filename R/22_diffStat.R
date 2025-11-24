@@ -89,8 +89,8 @@ onefun <- function(datalst, metadata, colsamples, statistic, groupcol, min.per.g
     ### It performs the test for each region (wilcoxon if there are only two groups, otherwise the kruskal one)
     res <- filter %>% dplyr::nest_by(id) %>%
       dplyr::mutate(p.value = ifelse(dplyr::n_distinct(data[groupcol]) == 2,
-                                     wilcox.test(as.formula(paste(statistic, groupcol, sep = "~")), data = data)$p.value,
-                                     kruskal.test(as.formula(paste(statistic, groupcol, sep = "~")), data = data)$p.value),
+                                     stats::wilcox.test(stats::as.formula(paste(statistic, groupcol, sep = "~")), data = data)$p.value,
+                                     stats::kruskal.test(stats::as.formula(paste(statistic, groupcol, sep = "~")), data = data)$p.value),
                     type = ifelse(dplyr::n_distinct(data[groupcol]) == 2,
                                   "wilcox.test",
                                   "kruskal.test")) %>%
@@ -100,7 +100,7 @@ onefun <- function(datalst, metadata, colsamples, statistic, groupcol, min.per.g
       tidyr::separate(id, c("seqnames", "start", "end"), "_", remove = FALSE, convert = TRUE)
     ## find medians
     medians <- filter %>% dplyr::nest_by(id, across(groupcol)) %>%
-      dplyr::mutate(median = median(data[[statistic]])) %>%
+      dplyr::mutate(median = stats::median(data[[statistic]])) %>%
       tidyr::unnest(c(id, groupcol)) %>%
       dplyr::ungroup() %>%
       dplyr::select(1,2,4) %>% tidyr::pivot_wider(names_from = groupcol, values_from = median)

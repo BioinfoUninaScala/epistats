@@ -84,15 +84,15 @@ epiAnalysis= function(align,
     #out=do.call(Mapi, c(rbind, out))
     #setta i file e i nomi di colonna
     bedFile=paste(pathDir,paste(aname,"intervals.bed", sep="_"),sep="/")
-    write.table(intervals,bedFile, row.names = F, col.names = T, quote= F, sep = "\t")
+    utils::write.table(intervals,bedFile, row.names = F, col.names = T, quote= F, sep = "\t")
     epiFile=paste(pathDir,paste(aname,"epiAnalysis.txt", sep="_"),sep="/")
-    write.table(epi, epiFile, row.names = F, col.names = T, quote= F, sep ="\t")
+    utils::write.table(epi, epiFile, row.names = F, col.names = T, quote= F, sep ="\t")
     logFile=paste(pathDir,paste(aname,"log.txt", sep="_"),sep="/")
-    write.table(log, logFile, row.names = F, col.names = F, quote= F, sep ="\t")
+    utils::write.table(log, logFile, row.names = F, col.names = F, quote= F, sep ="\t")
     if(get.cPos==TRUE)
     {
       cPosFile=paste(pathDir,paste(aname,"cPos.txt", sep="_"), sep="/")
-      write.table(out[["CPos"]], cPosFile, row.names = F, col.names = F, quote = F, sep="\t")
+      utils::write.table(out[["CPos"]], cPosFile, row.names = F, col.names = F, quote = F, sep="\t")
     }
   }
   return(list(intervals,epi,log))

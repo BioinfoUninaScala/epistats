@@ -1,8 +1,8 @@
-.Rproj.user
+^\.Rproj\.user$
 .Rhistory
 .RData
 .Ruserdata
 
 /doc/
 /Meta/
-test_functions.R
+.Rproj.user

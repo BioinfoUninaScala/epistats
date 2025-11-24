@@ -118,7 +118,7 @@ oneStat <- function(sample_list, region, metadata, colgroups, colsamples, rmUnme
       a = groups %>% purrr::map_dbl(~ length(metadata[[colsamples]][metadata[[colgroups]] == .x]))
       a = t(as.data.frame(a, row.names = groups))
       rownames(a) = NULL
-      p <- suppressMessages(vegan::adonis2(as.formula(paste("dist", colgroups, sep = "~")), data = metadata))
+      p <- suppressMessages(vegan::adonis2(stats::as.formula(paste("dist", colgroups, sep = "~")), data = metadata))
       result = data.frame("id" = region,
                          "F.statistics" = p$F[1],
                          "p.value" = p$`Pr(>F)`[1],
