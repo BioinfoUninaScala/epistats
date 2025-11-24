@@ -9,16 +9,6 @@
 #' @param rmUnmeth Logical indicating if 0 methylated epialleles should be removed or not from the analysis.
 #' @return Principal Component analysis results and plot.
 #' @export
-#' @examples
-#' samples_list <- list(Sample1_epiAnalysis.txt,
-#'                      Sample2_epiAnalysis.txt,
-#'                      Sample3_epiAnalysis.txt,
-#'                      Sample4_epiAnalysis.txt)
-#'
-#' runRDA(samples = samples_list,
-#'        region = "chr1_34567876_34567923",
-#'        printData = FALSE,
-#'        rmUnmeth = FALSE)
 
 runRDA <- function(samples, region, printData = FALSE, rmUnmeth = FALSE){
   data <- getEpimatrix(samples, region)

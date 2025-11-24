@@ -44,20 +44,3 @@ Group columns containing the number of samples used for each analysis are also d
 \description{
 This function takes as input the compressed binary matrices containing the epiallele composition from all samples. It works by performing a PERMANOVA analysis, calculating the distances between samples within and among the distinct groups.
 }
-\examples{
-samples_list <- list(Sample1_epiAnalysis.txt,
-                     Sample2_epiAnalysis.txt,
-                     Sample3_epiAnalysis.txt,
-                     Sample4_epiAnalysis.txt)
-
-
-epistat <- epiStat(sample_list = samples_list,
-                   metadata = ann,
-                   colgroups = "Group",
-                   colsamples = "Samples",
-                   rmUnmeth = FALSE,
-                   cores = 40,
-                   minGroups = 2,
-                   minSampleSize = 2,
-                   reduce = FALSE)
-}

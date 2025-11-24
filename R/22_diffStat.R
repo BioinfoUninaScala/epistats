@@ -8,6 +8,7 @@
 #' @importFrom plyranges as_granges reduce_ranges
 #' @param intervals_list A list object. It corresponds to a list containing the summary outputs obtained through epiAnalysis() function (the ones containing the summary statistics, such as Shannon Entropy, Mean CpGs distance, etc...).
 #' @param metadata Samples metadata provided as table. This input data should contain specific columns for samples names and groups distinction.
+#' @param colsamples .
 #' @param statistic Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").
 #' @param groupcol Character indicating the column name of the Groups in the metadata used to compare the statistics
 #' @param min.per.group An integer indicating the minimum number of samples for group required to perform the test.
@@ -23,22 +24,7 @@
 #' test = test used to perform the analysis (depending on the number of distinct groups used for the test)
 #'
 #' @export
-#' @examples
-#' data(epistats)
-#' samples_list <- list(Sample1_intervals.bed,
-#'                      Sample2_intervals.bed,
-#'                      Sample3_intervals.bed,
-#'                      Sample4_intervals.bed)
-#'
-#' diff <- diffStat(intervals_list = samples_list,
-#'                  metadata = ann,
-#'                  colsamples = "Samples",
-#'                  statistic = "Shannon",
-#'                  groupcol = "Group",
-#'                  min.per.group = 2,
-#'                  min.groups = 2,
-#'                  cores = 40,
-#'                  reduce = FALSE)
+
 
 diffStat <- function(intervals_list,
                      metadata,

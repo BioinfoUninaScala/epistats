@@ -11,22 +11,9 @@
 #' @param minGroups An integer indicating the minimum number of unique Groups that should be used for the dissimilarity analysis.
 #' @param minSampleSize An integer indicating the minimum number of samples per group required to perform the statistical analysis.
 #' @param printData Logical indicating whether the epiallele matrix should be printed in the standard output or not (Default = FALSE).
-#' @return
+#' @return .
 #' @export
-#' @examples
-#' samples_list <- list(Sample1_epiAnalysis.txt,
-#'                      Sample2_epiAnalysis.txt,
-#'                      Sample3_epiAnalysis.txt,
-#'                      Sample4_epiAnalysis.txt)
-#'
-#' onestat <- oneTest(sample_list = samples_list,
-#'                    region = "chr1_34567876_34567923",
-#'                    metadata = ann,
-#'                    rmUnmeth = FALSE,
-#'                    minGroups = 2,
-#'                    minSampleSize = 2,
-#'                    printData = FALSE)
-#'
+
 
 oneTest <- function(sample_list, region, metadata, rmUnmeth = FALSE, minGroups = 2, minSampleSize = 2, printData = FALSE){
   data <- getEpimatrix(sample_list, region)

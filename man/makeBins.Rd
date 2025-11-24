@@ -35,25 +35,3 @@ A GRanges object containing the newly designed target regions with the features 
 \description{
 This functions represents one of the two methods available in the epistats package to design customised regions. makeBins() is provided to design target regions which contain a given number of CpG sites (or any of the other C* patterns).
 }
-\examples{
-#' data <- loadInput(bamfile, genomefile)
-algn <- data[[1]]
-
-## Keeping only standard chromosomes
-filtered <- filterBAM(algn,
-                      keepStChr =TRUE,
-                      keepM = FALSE,
-                      retainChr = NULL)
-
-## Selecting regions with a minimum coverage
-covered <- filterByCoverage(algn, threshold = 50, minsize = 8)
-
-## Designing regions containing 4 CpG sites
-  regions = makeBins(gr = covered,
-                     Genome = Genome,
-                     mode = "CG",
-                     n = 4,
-                     min.binsize = 8,
-                     max.binsize = 100,
-                     cores = 40)
-}

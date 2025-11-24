@@ -17,12 +17,3 @@ Epiallele community data matrix.
 \description{
 The function gives as output the epiallele composition matrix relative to one genomic interval.
 }
-\examples{
-samples_list <- list(Sample1_epiAnalysis.txt,
-                     Sample2_epiAnalysis.txt,
-                     Sample3_epiAnalysis.txt,
-                     Sample4_epiAnalysis.txt)
-
-epimatrix <- getEpimatrix(samples = samples_list,
-                         region = "chr1_34567876_34567923")
-}

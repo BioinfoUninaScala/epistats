@@ -19,16 +19,3 @@ A list containing the dissimilarity results.
 \description{
 The function returns the information regarding which epialleles are the ones contributing for the dissimilarity of samples among groups.
 }
-\examples{
-samples_list <- list(Sample1_epiAnalysis.txt,
-                     Sample2_epiAnalysis.txt,
-                     Sample3_epiAnalysis.txt,
-                     Sample4_epiAnalysis.txt)
-
-epidiv <- epidiv(samples = samples_list,
-                 region = "chr1_34567876_34567923",
-                 metadata = ann)
-
-
-
-}

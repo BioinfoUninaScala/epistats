@@ -21,6 +21,8 @@ diffStat(
 
 \item{metadata}{Samples metadata provided as table. This input data should contain specific columns for samples names and groups distinction.}
 
+\item{colsamples}{.}
+
 \item{statistic}{Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").}
 
 \item{groupcol}{Character indicating the column name of the Groups in the metadata used to compare the statistics}
@@ -44,21 +46,4 @@ test = test used to perform the analysis (depending on the number of distinct gr
 }
 \description{
 Getting the regions that differ for one statistic (e.g. Shannon Entropy, Average DNA Methylation, ...) among distinct conditions.
-}
-\examples{
-data(epistats)
-samples_list <- list(Sample1_intervals.bed,
-                     Sample2_intervals.bed,
-                     Sample3_intervals.bed,
-                     Sample4_intervals.bed)
-
-diff <- diffStat(intervals_list = samples_list,
-                 metadata = ann,
-                 colsamples = "Samples",
-                 statistic = "Shannon",
-                 groupcol = "Group",
-                 min.per.group = 2,
-                 min.groups = 2,
-                 cores = 40,
-                 reduce = FALSE)
 }

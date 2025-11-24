@@ -1,7 +1,7 @@
 Package: epistats
 Type: Package
 Title: What the Package Does (Title Case)
-Version: 0.1.0
+Version: 0.2.0
 Author: Who wrote it
 Maintainer: The package maintainer <yourself@somewhere.net>
 Description: The package is an excellent tool for the extraction of the epiallelic
@@ -14,9 +14,11 @@ LazyData: true
 Imports: Biostrings, GenomicAlignments, GenomeInfoDb, GenomicRanges, IRanges, 
          parallel, S4Vectors, BSgenome, foreach, purrr, XVector,
          dplyr, stats, vegan, pairwiseAdonis, magrittr, Rsamtools, tidyr, 
-         broom, seq2pathway, plyranges, doParallel
-RoxygenNote: 7.1.2
+         broom, seq2pathway, plyranges, doParallel, rlang, methods,
+         Matrix, stringr, data.table
+RoxygenNote: 7.3.3
 Suggests:
     rmarkdown,
     knitr
-VignetteBuilder: knitr
+Depends: 
+    R (>= 2.10)

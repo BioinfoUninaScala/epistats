@@ -38,26 +38,3 @@ A GRanges object containing the newly designed sliding windows with user-defined
 \description{
 One of the two available methods to build target regions. This functions works by designing sliding windows with user-defined values of length and step size. Target regions will contain different numbers of CpG sites.
 }
-\examples{
-data <- loadInput(bamfile, genomefile)
-algn <- data[[1]]
-
-## Keeping only standard chromosomes
-filtered <- filterBAM(algn,
-                      keepStChr =TRUE,
-                      keepM = FALSE,
-                      retainChr = NULL)
-
-## Selecting regions with a minimum coverage
-covered <- filterByCoverage(algn, threshold = 50, minsize = 8)
-
-## Designing customised sliding windows
-windows <- makeWindows(gr = covered,
-                       Genome = Genome,
-                       window = 50,
-                       step = 1,
-                       mode = "CG",
-                       min.C = 2,
-                       max.C = 50,
-                       cores = 40)
-}

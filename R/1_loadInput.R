@@ -8,11 +8,7 @@
 #' @param genomefile path to genome (FASTA format).
 #' @return A list containg a GAlignment object and a DNAStringSet object.
 #' @export
-#' @examples
-#' bamfile = ("./bamfilelocation")
-#' genomefile = ("./genome.fa")
-#' data <- loadInput(bamfile, genomefile)
-#'
+
 
 loadInput=function(bamfile,
                    genomefile)

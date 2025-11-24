@@ -30,23 +30,8 @@ oneTest(
 \item{printData}{Logical indicating whether the epiallele matrix should be printed in the standard output or not (Default = FALSE).}
 }
 \value{
-
+.
 }
 \description{
 Performing PERMANOVA considering one specific region of interest.
-}
-\examples{
-samples_list <- list(Sample1_epiAnalysis.txt,
-                     Sample2_epiAnalysis.txt,
-                     Sample3_epiAnalysis.txt,
-                     Sample4_epiAnalysis.txt)
-
-onestat <- oneTest(sample_list = samples_list,
-                   region = "chr1_34567876_34567923",
-                   metadata = ann,
-                   rmUnmeth = FALSE,
-                   minGroups = 2,
-                   minSampleSize = 2,
-                   printData = FALSE)
-
 }

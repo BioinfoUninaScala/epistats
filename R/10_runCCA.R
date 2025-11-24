@@ -12,18 +12,7 @@
 #' @param rmUnmeth Logical indicating whether unmethylated epialleles should be discarded from the analysis.
 #' @return A list object storing the ordination results and an ordination plot.
 #' @export
-#' @examples
-#' samples_list <- list(Sample1_epiAnalysis.txt,
-#'                      Sample2_epiAnalysis.txt,
-#'                      Sample3_epiAnalysis.txt,
-#'                      Sample4_epiAnalysis.txt)
-#'
-#' p <- runCCA(samples = samples_list,
-#'             region = "chr1_34567876_34567923",
-#'             metadata = ann,
-#'             printData = FALSE,
-#'             rmUnmeth = FALSE)
-#' p
+
 
 runCCA <- function(samples, region, metadata, printData = FALSE, rmUnmeth = FALSE){
   data <- getEpimatrix(samples, region)

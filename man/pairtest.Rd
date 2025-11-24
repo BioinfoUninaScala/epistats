@@ -19,13 +19,3 @@ A dataframe containing the p-values for each group comparison, when groups are m
 \description{
 This function perform a pairwise PERMANOVA analysis in order to figure out which groups are differing between each other.
 }
-\examples{
-samples_list <- list(Sample1_epiAnalysis.txt,
-                     Sample2_epiAnalysis.txt,
-                     Sample3_epiAnalysis.txt,
-                     Sample4_epiAnalysis.txt)
-
-pairtest <- pairtest(samples = samples_list,
-                     region = "chr1_34567876_34567923",
-                     metadata = ann)
-}

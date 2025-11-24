@@ -22,6 +22,8 @@ diffModel(
 
 \item{metadata}{Samples metadata provided as table. This input data should contain specific columns for samples names and groups distinction.}
 
+\item{samples}{.}
+
 \item{statistic}{Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").}
 
 \item{groupcol}{Character indicating the column name of the Groups in the metadata used to compare the statistics.}
@@ -41,20 +43,4 @@ A dataframe containing the statistical test results.
 }
 \description{
 This function is implemented to get different significant regions using a linear model adjusted for a covariate (different Points in time, different tissue, etc...).
-}
-\examples{
-data(epistats)
-samples_list <- list(Sample1_intervals.bed,
-                     Sample2_intervals.bed,
-                     Sample3_intervals.bed,
-                     Sample4_intervals.bed)
-
-diffresult <- diffAdjust(intervals_list = samples_list,
-                         metadata = ann,
-                         samples = "Samples",
-                         statistic = "Shannon",
-                         groupcol = "Group",
-                         covariate = "Time",
-                         cores = 40,
-                         reduce = FALSE)
 }

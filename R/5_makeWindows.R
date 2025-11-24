@@ -17,28 +17,6 @@
 #' @param cores Numeric indicating the number of cores to be used for the computation
 #' @return A GRanges object containing the newly designed sliding windows with user-defined features.
 #' @export
-#' @examples
-#' data <- loadInput(bamfile, genomefile)
-#' algn <- data[[1]]
-#'
-#' ## Keeping only standard chromosomes
-#' filtered <- filterBAM(algn,
-#'                       keepStChr =TRUE,
-#'                       keepM = FALSE,
-#'                       retainChr = NULL)
-#'
-#' ## Selecting regions with a minimum coverage
-#' covered <- filterByCoverage(algn, threshold = 50, minsize = 8)
-#'
-#' ## Designing customised sliding windows
-#' windows <- makeWindows(gr = covered,
-#'                        Genome = Genome,
-#'                        window = 50,
-#'                        step = 1,
-#'                        mode = "CG",
-#'                        min.C = 2,
-#'                        max.C = 50,
-#'                        cores = 40)
 
 makeWindows <- function(gr,
                         Genome,

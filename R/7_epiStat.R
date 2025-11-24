@@ -24,22 +24,6 @@
 #' numEpi = number of different epialleles observed.
 #' Group columns containing the number of samples used for each analysis are also displayed for each region.
 #' @export
-#' @examples
-#' samples_list <- list(Sample1_epiAnalysis.txt,
-#'                      Sample2_epiAnalysis.txt,
-#'                      Sample3_epiAnalysis.txt,
-#'                      Sample4_epiAnalysis.txt)
-#'
-#'
-#' epistat <- epiStat(sample_list = samples_list,
-#'                    metadata = ann,
-#'                    colgroups = "Group",
-#'                    colsamples = "Samples",
-#'                    rmUnmeth = FALSE,
-#'                    cores = 40,
-#'                    minGroups = 2,
-#'                    minSampleSize = 2,
-#'                    reduce = FALSE)
 
 
 epiStat <- function(sample_list, metadata, colgroups, colsamples,

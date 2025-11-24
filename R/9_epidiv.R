@@ -10,18 +10,7 @@
 #' @param metadata A dataframe object containing samples metadata. Dataframe should contain dedicated columns for samples IDs and the one indicating the group they belong to.
 #' @return A list containing the dissimilarity results.
 #' @export
-#' @examples
-#' samples_list <- list(Sample1_epiAnalysis.txt,
-#'                      Sample2_epiAnalysis.txt,
-#'                      Sample3_epiAnalysis.txt,
-#'                      Sample4_epiAnalysis.txt)
-#'
-#' epidiv <- epidiv(samples = samples_list,
-#'                  region = "chr1_34567876_34567923",
-#'                  metadata = ann)
-#'
-#'
-#'
+
 
 
 epidiv <- function(samples, region, metadata){

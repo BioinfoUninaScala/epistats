@@ -8,14 +8,6 @@
 #' @param region A character indicating the regionID wanted to perform the analysis.
 #' @return Epiallele community data matrix.
 #' @export
-#' @examples
-#' samples_list <- list(Sample1_epiAnalysis.txt,
-#'                      Sample2_epiAnalysis.txt,
-#'                      Sample3_epiAnalysis.txt,
-#'                      Sample4_epiAnalysis.txt)
-#'
-#' epimatrix <- getEpimatrix(samples = samples_list,
-#'                          region = "chr1_34567876_34567923")
 
 getEpimatrix <- function(samples, region){
   filt <- purrr::map(samples, ~ dplyr::filter(., id == region))

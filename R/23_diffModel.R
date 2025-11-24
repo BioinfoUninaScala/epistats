@@ -8,6 +8,7 @@
 #' @importFrom plyranges as_granges group_by reduce_ranges
 #' @param intervals_list A list object. It corresponds to a list containing the summary outputs obtained through epiAnalysis() function (the ones containing the summary statistics, such as Shannon Entropy, Mean CpGs distance, etc...).
 #' @param metadata Samples metadata provided as table. This input data should contain specific columns for samples names and groups distinction.
+#' @param samples .
 #' @param statistic Character indicating the column name that contains the statistic vector the user wants to use to perform the test (e.g., "Shannon", "mean_met").
 #' @param groupcol Character indicating the column name of the Groups in the metadata used to compare the statistics.
 #' @param covariate Character indicating the column name of the covariate to be used to adjust the linear model.
@@ -17,21 +18,7 @@
 #' @param reduce Logical indicating whether adjacent overlapping intervals should be reduced as a unique interval or not.
 #' @return A dataframe containing the statistical test results.
 #' @export
-#' @examples
-#' data(epistats)
-#' samples_list <- list(Sample1_intervals.bed,
-#'                      Sample2_intervals.bed,
-#'                      Sample3_intervals.bed,
-#'                      Sample4_intervals.bed)
-#'
-#' diffresult <- diffAdjust(intervals_list = samples_list,
-#'                          metadata = ann,
-#'                          samples = "Samples",
-#'                          statistic = "Shannon",
-#'                          groupcol = "Group",
-#'                          covariate = "Time",
-#'                          cores = 40,
-#'                          reduce = FALSE)
+
 
 diffModel <- function(intervals_list,
                       metadata,

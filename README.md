@@ -86,4 +86,3 @@ EpiStatProfiler is provided with a set of functions that perform statistycal tes
 * `diffStat` : this function takes as input the tables containing the summary metrics related to the analysed genomic loci in all samples. It implements non-parametric tests (Wilcoxon and Kruskal-Wallis tests) to identify significantly different genomic regions using the user-specified statistic (Shannon entropy, Average methylation, etc...)
 </p>
 
-See [vignettes](/vignettes/my-vignette.Rmd) for details.

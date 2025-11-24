@@ -21,14 +21,3 @@ Principal Component analysis results and plot.
 \description{
 Running principal component analysis for one genomic interval
 }
-\examples{
-samples_list <- list(Sample1_epiAnalysis.txt,
-                     Sample2_epiAnalysis.txt,
-                     Sample3_epiAnalysis.txt,
-                     Sample4_epiAnalysis.txt)
-
-runRDA(samples = samples_list,
-       region = "chr1_34567876_34567923",
-       printData = FALSE,
-       rmUnmeth = FALSE)
-}

@@ -9,3 +9,9 @@ cdist <- function(matrix){
   dist=round(mean(Cpos[-1]-Cpos[-length(Cpos)]),2)
   return(dist)
 }
+
+cdist_ont <- function(matrix){
+  Cpos=as.numeric(colnames(matrix))
+  dist=round(mean(Cpos[-1]-Cpos[-length(Cpos)]),2)
+  return(dist)
+}

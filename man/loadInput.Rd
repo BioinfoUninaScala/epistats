@@ -17,9 +17,3 @@ A list containg a GAlignment object and a DNAStringSet object.
 \description{
 Loading Input data.
 }
-\examples{
-bamfile = ("./bamfilelocation")
-genomefile = ("./genome.fa")
-data <- loadInput(bamfile, genomefile)
-
-}

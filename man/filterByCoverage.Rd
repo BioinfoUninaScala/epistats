@@ -19,8 +19,3 @@ filtered GRanges object.
 \description{
 The functions allows the selection of genomic regions that satisfy a minimum coverage threshold defined by the user as a parameter.
 }
-\examples{
-## Selecting regions that are covered by at least 50 reads
-## Building target regions containing 4 CpG sites covered by at least 50 reads
-covered <- filterByCoverage(algn, threshold = 50, minsize = 8)
-}
