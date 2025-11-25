@@ -70,6 +70,19 @@ epiAnalysisONT= function(
                       cores = 1)
 {
   
+  if (!methods::is(sparseMat, "dgCMatrix")) {
+    stop("Input must be a sparse dgCMatrix")
+  }
+  
+  values <- abs(sparseMat@x)
+  uniq_vals <- sort(unique(values))
+  
+  if (!all(as.character(uniq_vals) %in% names(code_map_epiallele))) {
+    stop("Some matrix values do not appear in `code_map_epiallele`.\n",
+         "Missing: ", paste(setdiff(as.character(uniq_vals),
+                                    names(code_map_epiallele)), collapse=", "))
+  }
+  
   df <- data.frame(bins)[,1:3]
   message('Dividing region table into ', cores, ' tables with ~', round(nrow(df)/cores), ' rows...')
   df_split <- split(df, (seq(nrow(df))-1) %/% (nrow(df)/cores))

@@ -140,7 +140,7 @@ check_code_map <- function(code_map) {
 
 
 load_genome <- function(genome_assembly, sel_chr) {
-  message('Loading reference genome:', genome_assembly, '...')
+  message('Loading reference genome: ', genome_assembly, '...')
   if (inherits(genome_assembly, "BSgenome")) {
     genome <- genome_assembly
   } else if (is.character(genome_assembly) && length(genome_assembly) == 1L) {
@@ -301,8 +301,7 @@ check_consistency <- function(read_coords_df, mod_df, base_coords_df){
     stop("No chromosomes in common among BED, modkit, and genome coordinates.")
   }
   
-  cat("Common chromosomes between inputs: ", 
-          paste(common_chr, collapse = ", "))
+  cat("Common chromosomes between inputs: ", paste(common_chr, collapse = ", "), '\n')
   
   ## ---- 3. Read ID consistency ----
   missing_in_modkit <- setdiff(read_coords_df$readID, mod_df$read_id)
@@ -324,7 +323,7 @@ check_consistency <- function(read_coords_df, mod_df, base_coords_df){
   }
   
   ## ---- 5. Checks passed ----
-  cat("Consistency checks passed.")
+  cat("Consistency checks passed.\n")
   return(invisible(TRUE))
 }
 
@@ -360,7 +359,7 @@ build_sparse_matrix <- function(base_coords_df, read_coords_df, mod_df) {
   
   # inserisco i valori modificati
   mod_df$col <- base_index[mod_df$base_key]
-  cat('Number of missing bases in modkit: ', sum(is.na(mod_df$col)))
+  cat('Number of modkit calls not present in reference sites: ', sum(is.na(mod_df$col)), '\n')
   
   f_mod_df   <- mod_df[!is.na(mod_df$col), ]
   
