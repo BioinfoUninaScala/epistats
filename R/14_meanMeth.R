@@ -20,7 +20,10 @@ meanMeth <- function(matrix){
 meanMethONT <- function(matrix, param = list(meth_code = 1L, unmeth_code = 0L)){
   meth_code = param[[1]]
   unmeth_code = param[[2]]
-  mean_met=round(sum(as.matrix(matrix == meth_code),na.rm=T)/sum(as.matrix(matrix %in% c(meth_code, unmeth_code)),na.rm=T),2)
+  new_mat <-as.matrix(matrix)
+  methylated_sites <- sum(new_mat == meth_code,na.rm=T)
+  total_sites <- sum(new_mat %in% c(meth_code, unmeth_code),na.rm=T)
+  mean_met=round(methylated_sites/total_sites,2)
   return(mean_met)
 }
 

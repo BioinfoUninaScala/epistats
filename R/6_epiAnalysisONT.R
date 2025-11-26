@@ -321,7 +321,7 @@ encodeEpiallele <- function(sparseMat,
 get_out_ont=function(epi_df, out, strand, coord, myfuns)
 {
   parameters=lapply(myfuns, function(x) { 
-    ifelse(length(x) == 1, x(epi_df), x[[1]](epi_df, x[[2]]))
+    ifelse(length(x) == 1, x(epi_df), x[[1]](epi_df, x[[2]]) )
     }
   )
   
