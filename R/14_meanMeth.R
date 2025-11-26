@@ -10,14 +10,17 @@ meanMeth <- function(matrix){
 }
 
 
-#' Calculating the average DNA methylation for one interval for ONT data
+#' Calculating the average DNA methylation for a not binary epialleles matrix.
 #'
 #' @param matrix Epialleles matrix.
-#' @param methylated_code A numeric value indicating the methylation status in the epialelles matrix.
+#' @param param A list of two numeric values indicating the codes for methylated and unmethylated status in the epialleles matrix.
 #' @return A numeric indicating the average DNA methylation of one genomic region
 #' @export
 
-meanMethONT <- function(matrix, methylated_code = 1L){
-  mean_met=round(sum(as.matrix(matrix == methylated_code),na.rm=T)/(dim(matrix)[1]*dim(matrix)[2]),2)
+meanMethONT <- function(matrix, param = list(meth_code = 1L, unmeth_code = 0L)){
+  meth_code = param[[1]]
+  unmeth_code = param[[2]]
+  mean_met=round(sum(as.matrix(matrix == meth_code),na.rm=T)/sum(as.matrix(matrix %in% c(meth_code, unmeth_code)),na.rm=T),2)
   return(mean_met)
 }
+

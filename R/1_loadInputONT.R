@@ -246,13 +246,13 @@ load_modkit_calls <- function(modkit_file, base_qual_th, sel_chr = NULL, code_ma
   }
   
   mod_df <- mod_file %>% 
-    filter(base_qual >= base_qual_th) %>%
-    mutate(ref_position = as.double(ref_position)) %>%
+    dplyr::filter(base_qual >= base_qual_th) %>%
+    dplyr::mutate(ref_position = as.double(ref_position)) %>%
     dplyr::rename(
       chr = chrom,
       ref_position_0based = "ref_position"
     ) %>%
-    mutate(
+    dplyr::mutate(
       ref_position = ifelse(
         ref_strand == "-",
         ref_position_0based,

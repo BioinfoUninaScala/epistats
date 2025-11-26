@@ -2,18 +2,18 @@
 % Please edit documentation in R/14_meanMeth.R
 \name{meanMethONT}
 \alias{meanMethONT}
-\title{Calculating the average DNA methylation for one interval for ONT data}
+\title{Calculating the average DNA methylation for a not binary epialleles matrix.}
 \usage{
-meanMethONT(matrix, methylated_code = 1L)
+meanMethONT(matrix, param = list(meth_code = 1L, unmeth_code = 0L))
 }
 \arguments{
 \item{matrix}{Epialleles matrix.}
 
-\item{methylated_code}{A numeric value indicating the methylation status in the epialelles matrix.}
+\item{param}{A list of two numeric values indicating the codes for methylated and unmethylated status in the epialleles matrix.}
 }
 \value{
 A numeric indicating the average DNA methylation of one genomic region
 }
 \description{
-Calculating the average DNA methylation for one interval for ONT data
+Calculating the average DNA methylation for a not binary epialleles matrix.
 }
