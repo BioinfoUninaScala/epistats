@@ -182,8 +182,8 @@ subsetSparseByRegions <- function(sparseMat, base_gr, regions) {
   )
   
   # colonne che cadono nelle regioni
-  hits <- subsetByOverlaps(base_gr, regions_gr)
-  cols_keep <- which(base_gr %in% hits)
+  ov <- GenomicRanges::findOverlaps(base_gr, regions_gr, ignore.strand = TRUE)
+  cols_keep <- sort(unique(S4Vectors::queryHits(ov)))
   
   if (length(cols_keep) == 0L) {
     warning("Any column of your matrix falls into the selected regions.")
@@ -221,7 +221,7 @@ epiallele_analyse_ont <- function(
   sparseMati_in_bin <- subsetSparseByRegions(sparseMati, sparseMati_gr, bin)
   
   ## Remove reads that contain zeros --> cannot determine full pattern
-  f_sparseMati_in_bin <- sparseMati_in_bin[Matrix::rowSums(sparseMati_in_bin == 0) == 0, ]
+  f_sparseMati_in_bin <- sparseMati_in_bin[Matrix::rowSums(sparseMati_in_bin == 0) == 0, , drop = FALSE]
   
   if (nrow(f_sparseMati_in_bin) < threshold) {
     out$log <- as.data.frame(bin)
