@@ -59,6 +59,7 @@
 #'   Values are stored as signed integers; if `ref_strand == "-"`,
 #'   the value is multiplied by -1.
 #' @param rm_zero_col Boolean value. When set to TRUE, zero columns are filtered out. Default value: FALSE.
+#' @param nThread Number of threads used by data.table::fread() to load modkit_file and read_coord_bedfile.
 #' @return A sparse matrix (Matrix::dgCMatrix) with reads in rows and genomic motif positions in columns.
 #' @export
 
@@ -73,7 +74,8 @@ loadInputONT <- function(
     base_qual_th = 0,
     output_file = NULL,
     code_map = c(default = 1L, m = 2L, h = 3L),
-    rm_zero_col = FALSE
+    rm_zero_col = FALSE,
+    nThread = 8
 ) {
   
   check_bases(bases)
@@ -85,17 +87,19 @@ loadInputONT <- function(
   read_coords_df <- load_read_coords(
     read_coord_bedfile = read_coord_bedfile,
     mapq_th = mapq_th,
-    sel_chr = sel_chr
+    sel_chr = sel_chr,
+    nThread = nThread
   )
   
   mod_df <- load_modkit_calls(
     modkit_file = modkit_file,
     base_qual_th = base_qual_th,
     sel_chr = sel_chr,
-    code_map = code_map
+    code_map = code_map, 
+    nThread = nThread
   )
   
-  check_consistency(base_coords_df, read_coords_df, mod_df)
+  check_consistency(read_coords_df, mod_df, base_coords_df)
   
   mat_base <- build_sparse_matrix(
     base_coords_df = base_coords_df,
@@ -196,93 +200,150 @@ get_coordinates <- function(genome, bases = "CG", sel_chr = NULL) {
 }
 
 
-load_read_coords <- function(read_coord_bedfile, mapq_th, sel_chr = NULL) {
+load_read_coords <- function(read_coord_bedfile,
+                              mapq_th,
+                              sel_chr = NULL,
+                              nThread = data.table::getDTthreads()) {
   message("Reading reads coordinates from: ", read_coord_bedfile)
-  read_coords <- fread(read_coord_bedfile)
   
-  if (ncol(read_coords) != 6) {
+  read_coords <- data.table::fread(
+    read_coord_bedfile,
+    header      = FALSE,
+    colClasses  = list(
+      character = c("V1", "V4", "V6"),  # chr, readID, strand
+      integer   = c("V2", "V3"),        # start, end
+      numeric   = "V5"                  # score / MAPQ
+    ),
+    nThread     = nThread,
+    showProgress = TRUE
+  )
+  
+  if (ncol(read_coords) != 6L) {
     stop("The provided read_coord_bedfile must have 6 columns!")
   }
   if (nrow(read_coords) == 0L) {
     stop("read_coord_bedfile has 0 rows - nothing to process.")
   }
-  if (!is.numeric(read_coords$V5)) {
+  if (!is.numeric(read_coords[["V5"]])) {
     stop("Column 5 of read_coord_bedfile (score/MAPQ) must be numeric.")
   }
   
-  names(read_coords) <- c("chr", "start", "end", "readID", "score", "strand")
+  data.table::setDT(read_coords)
+  data.table::setnames(read_coords,
+                       old = paste0("V", 1:6),
+                       new = c("chr", "start", "end", "readID", "score", "strand"))
   
-  read_coords_df <- read_coords %>%
-    mutate(start = start + 1) %>%
-    filter(score >= mapq_th)
+  read_coords[, start := start + 1L]
+  read_coords <- read_coords[score >= mapq_th]
   
   if (!is.null(sel_chr)) {
-    read_coords_df <- read_coords_df %>%
-      dplyr::filter(chr %in% sel_chr)
+    read_coords <- read_coords[chr %in% sel_chr]
   }
   
-  if (nrow(read_coords_df) == 0L) {
+  if (nrow(read_coords) == 0L) {
     stop("No reads left after filtering (MAPQ and/or chromosomes).")
   }
   
-  read_coords_df
+  return(read_coords)
 }
 
 
-load_modkit_calls <- function(modkit_file, base_qual_th, sel_chr = NULL, code_map) {
+load_modkit_calls <- function(modkit_file,
+                               base_qual_th,
+                               sel_chr = NULL,
+                               code_map,
+                               nThread = data.table::getDTthreads()) {
   message("Reading modkit calls from: ", modkit_file)
-  mod_file <- fread(modkit_file)
+  
+  required_cols <- c(
+    "read_id", "chrom", "ref_position",
+    "call_code", "base_qual", "ref_strand"
+  )
+  
+  mod_file <- data.table::fread(
+    modkit_file,
+    select      = required_cols,
+    colClasses  = "character", 
+    nThread     = nThread,
+    showProgress = TRUE
+  )
   
   if (nrow(mod_file) == 0L) {
     stop("modkit_file has 0 rows - nothing to process.")
   }
   
-  required_cols <- c("read_id", "chrom", "ref_position",
-                     "call_code", "base_qual", "ref_strand")
   missing_cols <- setdiff(required_cols, names(mod_file))
   if (length(missing_cols) > 0L) {
     stop("The modkit file is missing required columns: ",
          paste(missing_cols, collapse = ", "))
   }
   
-  mod_df <- mod_file %>% 
-    dplyr::filter(base_qual >= base_qual_th) %>%
-    dplyr::mutate(ref_position = as.double(ref_position)) %>%
-    dplyr::rename(
-      chr = chrom,
-      ref_position_0based = "ref_position"
-    ) %>%
-    dplyr::mutate(
-      ref_position = ifelse(
-        ref_strand == "-",
-        ref_position_0based,
-        ref_position_0based + 1
-      ),
-      base_key = paste(chr, ref_position, sep = "_")
+  data.table::setDT(mod_file)
+  
+  mod_file[, bad_refpos := !grepl("^[0-9]+$", ref_position)]
+  
+  n_bad <- mod_file[bad_refpos == TRUE, .N]
+  if (n_bad > 0L) {
+    message("   [NOTE] Removing ", n_bad,
+            " rows with non-numeric ref_position (likely header lines).")
+    print(mod_file[bad_refpos == TRUE])
+    mod_file <- mod_file[bad_refpos == FALSE]
+  }
+  
+  mod_file[, bad_refpos := NULL] 
+  
+  mod_file[, `:=`(
+    base_qual    = as.integer(base_qual),
+    ref_position = as.integer(ref_position)
+  )]
+  
+  if (any(is.na(mod_file$ref_position))) {
+    stop("Unexpected NA in ref_position after cleaning.")
+  }
+  if (any(is.na(mod_file$base_qual))) {
+    stop("Unexpected NA in base_qual after cleaning.")
+  }
+  
+  if (base_qual_th > 0L) {
+    mod_file <- mod_file[base_qual >= base_qual_th]
+  }
+  if (nrow(mod_file) == 0L) {
+    stop("No modkit calls pass base_qual >= ", base_qual_th, ".")
+  }
+  
+  data.table::setnames(mod_file, "chrom", "chr")
+  
+  mod_file[, ref_position_0based := ref_position]
+  
+  mod_file[
+    ,
+    ref_position := data.table::fifelse(
+      ref_strand == "-",
+      ref_position_0based,
+      ref_position_0based + 1
     )
+  ]
+  
+  # base_key = chr_pos
+  mod_file[, base_key := paste(chr, ref_position, sep = "_")]
   
   if (!is.null(sel_chr)) {
-    mod_df <- mod_df %>%
-      dplyr::filter(chr %in% sel_chr)
-    if (nrow(mod_df) == 0L) {
+    mod_file <- mod_file[chr %in% sel_chr]
+    if (nrow(mod_file) == 0L) {
       stop("No modkit calls on selected chromosomes: ",
            paste(sel_chr, collapse = ", "))
     }
   }
   
-  # mapping call_code to value
-  val <- code_map[mod_df$call_code]
+  # mapping call_code -> value tramite code_map
+  val <- code_map[mod_file[["call_code"]]]
   unmapped <- is.na(val)
-  
   if (any(unmapped)) {
     val[unmapped] <- code_map[["default"]]
   }
+  mod_file[, value := as.integer(val)]
   
-  mod_df$value <- as.integer(val)
-  # mod_df$value <- ifelse(mod_df$ref_strand == "-", -1L * mod_df$value, mod_df$value)
-  
-  mod_df %>%
-    dplyr::select(read_id, chr, ref_position, base_key, value)
+  return(mod_file[, .(read_id, chr, ref_position, base_key, value)])
 }
 
 

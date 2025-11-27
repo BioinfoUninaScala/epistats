@@ -14,7 +14,8 @@ loadInputONT(
   base_qual_th = 0,
   output_file = NULL,
   code_map = c(default = 1L, m = 2L, h = 3L),
-  rm_zero_col = FALSE
+  rm_zero_col = FALSE,
+  nThread = 8
 )
 }
 \arguments{
@@ -72,6 +73,8 @@ Values are stored as signed integers; if `ref_strand == "-"`,
 the value is multiplied by -1.}
 
 \item{rm_zero_col}{Boolean value. When set to TRUE, zero columns are filtered out. Default value: FALSE.}
+
+\item{nThread}{Number of threads used by data.table::fread() to load modkit_file and read_coord_bedfile.}
 }
 \value{
 A sparse matrix (Matrix::dgCMatrix) with reads in rows and genomic motif positions in columns.
