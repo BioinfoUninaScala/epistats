@@ -1,0 +1,22 @@
+Package: epistats
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Author: Who wrote it
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: The package is an excellent tool for the extraction of the epiallelic
+            composition of specific genomic regions selected from RRBS experiments. 
+            It also provides a series of information specific for each of these regions, 
+            in addition with plotting functions and statistical analysis. 
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Imports: Biostrings, GenomicAlignments, GenomeInfoDb, GenomicRanges, IRanges, 
+         parallel, S4Vectors, BSgenome, foreach, purrr, XVector,
+         dplyr, stats, vegan, pairwiseAdonis, magrittr, Rsamtools, tidyr, 
+         broom, seq2pathway, plyranges, doParallel
+RoxygenNote: 7.1.2
+Suggests:
+    rmarkdown,
+    knitr
+VignetteBuilder: knitr
